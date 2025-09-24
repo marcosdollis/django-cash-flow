@@ -82,20 +82,30 @@ def setup_demo_company():
     if Company.objects.count() == 0:
         print("🏢 Criando empresa demo...")
         
-        company = Company.objects.create(
-            name='MEI Exemplo',
-            cnpj='12345678000100',
-            business_type='service',
-            is_active=True
-        )
-        
-        # Associar ao superuser se existir
+        # Primeiro, obter ou criar um usuário admin
         admin_user = User.objects.filter(username='admin').first()
-        if admin_user:
+        if not admin_user:
+            print("⚠️ Usuário admin não encontrado, criando empresa sem proprietário")
+            # Criar empresa sem owner (será definido depois)
+            company = Company.objects.create(
+                name='MEI Exemplo',
+                cnpj='12345678000100',
+                is_active=True
+            )
+        else:
+            # Criar empresa com owner
+            company = Company.objects.create(
+                name='MEI Exemplo',
+                cnpj='12345678000100',
+                owner=admin_user,
+                is_active=True
+            )
+            
+            # Criar relacionamento como membro também
             CompanyMember.objects.create(
                 user=admin_user,
                 company=company,
-                role='admin',
+                role='owner',
                 is_active=True
             )
             print(f"✅ Empresa associada ao usuário admin")
