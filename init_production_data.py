@@ -12,9 +12,11 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'cashflow_manager.settings')
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 django.setup()
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from accounts.models import Company, CompanyMember
 from transactions.models import Category
+
+User = get_user_model()
 
 
 def create_default_categories(company):
