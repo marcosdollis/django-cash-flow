@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Teste - Detalhes da Transação{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <h4>Detalhes da Transação - TESTE</h4>
+        </div>
+        <div class="card-body">
+            <p><strong>Descrição:</strong> {{ transaction.description }}</p>
+            <p><strong>Valor:</strong> R$ {{ transaction.amount|floatformat:2 }}</p>
+            <p><strong>Tipo:</strong> {{ transaction.transaction_type }}</p>
+            <p><strong>Status:</strong> {{ transaction.status }}</p>
+            <p><strong>Data:</strong> {{ transaction.transaction_date }}</p>
+            
+            <hr>
+            
+            <h5>Alterar Status:</h5>
+            <form method="post" action="{% url 'transactions:update_status' transaction.uuid %}">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <select name="status" class="form-select" onchange="this.form.submit()">
+                        <option value="pending" {% if transaction.status == 'pending' %}selected{% endif %}>Pendente</option>
+                        <option value="completed" {% if transaction.status == 'completed' %}selected{% endif %}>Concluída</option>
+                        <option value="cancelled" {% if transaction.status == 'cancelled' %}selected{% endif %}>Cancelada</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Alterar Status</button>
+            </form>
+            
+            <hr>
+            
+            <a href="{% url 'transactions:list' %}" class="btn btn-secondary">Voltar</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,1 @@
+# Landing app - para landing page do sistema

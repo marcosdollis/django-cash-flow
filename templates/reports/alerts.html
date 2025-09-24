@@ -1,0 +1,279 @@
+{% extends 'base.html' %}
+
+{% block title %}Alertas - CashFlow Manager{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>
+                <i class="fas fa-bell me-2"></i>Alertas
+            </h2>
+        </div>
+    </div>
+
+    <!-- Resumo de Alertas -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-exclamation-circle fa-2x mb-2"></i>
+                    <h5>{{ alert_counts.critical }}</h5>
+                    <span>Críticos</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                    <h5>{{ alert_counts.high }}</h5>
+                    <span>Alta</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-info-circle fa-2x mb-2"></i>
+                    <h5>{{ alert_counts.medium }}</h5>
+                    <span>Média</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-check-circle fa-2x mb-2"></i>
+                    <h5>{{ alert_counts.resolved }}</h5>
+                    <span>Resolvidos</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Alertas -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>Alertas 
+                {% if status_filter == 'active' %}Ativos{% elif status_filter == 'resolved' %}Resolvidos{% else %}{{ status_filter|title }}{% endif %}
+            </h5>
+            <div class="btn-group btn-group-sm" role="group">
+                <a href="?status=active" class="btn btn-outline-secondary {% if status_filter == 'active' %}active{% endif %}">Ativos</a>
+                <a href="?status=active&severity=critical" class="btn btn-outline-danger {% if severity_filter == 'critical' %}active{% endif %}">Críticos</a>
+                <a href="?status=active&severity=high" class="btn btn-outline-warning {% if severity_filter == 'high' %}active{% endif %}">Alta</a>
+                <a href="?status=resolved" class="btn btn-outline-success {% if status_filter == 'resolved' %}active{% endif %}">Resolvidos</a>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if alerts %}
+                {% for alert in alerts %}
+                <div class="alert alert-{% if alert.severity == 'critical' %}danger{% elif alert.severity == 'high' %}warning{% elif alert.severity == 'medium' %}info{% else %}secondary{% endif %} d-flex align-items-start" role="alert" id="alert-{{ alert.id }}">
+                    <i class="fas fa-{% if alert.severity == 'critical' %}exclamation-circle{% elif alert.severity == 'high' %}exclamation-triangle{% elif alert.severity == 'medium' %}info-circle{% else %}bell{% endif %} fa-lg me-3 mt-1"></i>
+                    <div class="flex-grow-1">
+                        <h6 class="alert-heading mb-1">{{ alert.title }}</h6>
+                        <p class="mb-2">{{ alert.message }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>{{ alert.triggered_at|timesince }} atrás
+                                {% if alert.acknowledged_at %}
+                                    | <i class="fas fa-check me-1"></i>Reconhecido {{ alert.acknowledged_at|timesince }} atrás
+                                {% endif %}
+                            </small>
+                            <div>
+                                {% if alert.status == 'active' %}
+                                    {% if not alert.acknowledged_at %}
+                                        <button class="btn btn-sm btn-outline-success me-2" onclick="acknowledgeAlert({{ alert.id }})">
+                                            <i class="fas fa-check me-1"></i>Reconhecer
+                                        </button>
+                                    {% endif %}
+                                    <button class="btn btn-sm btn-outline-primary me-2" onclick="viewRelated('{{ alert.alert_type }}', {{ alert.id }})">
+                                        <i class="fas fa-eye me-1"></i>Ver Detalhes
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="resolveAlert({{ alert.id }})">
+                                        <i class="fas fa-times me-1"></i>Resolver
+                                    </button>
+                                {% else %}
+                                    <span class="badge bg-success">{{ alert.get_status_display }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Nenhum alerta encontrado</h5>
+                    <p class="text-muted">
+                        {% if status_filter == 'active' %}
+                            Não há alertas ativos no momento. Isso é uma boa notícia!
+                        {% else %}
+                            Nenhum alerta foi encontrado para este filtro.
+                        {% endif %}
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Função para obter o token CSRF
+function getCSRFToken() {
+    return document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+           document.querySelector('meta[name="csrf-token"]')?.content || 
+           '';
+}
+
+// Função para reconhecer alerta
+function acknowledgeAlert(alertId) {
+    fetch(`/reports/alerts/${alertId}/acknowledge/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCSRFToken(),
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Atualizar visualmente o alerta
+            const alertElement = document.getElementById(`alert-${alertId}`);
+            if (alertElement) {
+                // Adicionar badge de reconhecido
+                const badge = document.createElement('span');
+                badge.className = 'badge bg-info ms-2';
+                badge.innerHTML = '<i class="fas fa-check me-1"></i>Reconhecido';
+                alertElement.querySelector('.alert-heading').appendChild(badge);
+                
+                // Desabilitar botão de reconhecer
+                const ackButton = alertElement.querySelector('button[onclick*="acknowledgeAlert"]');
+                if (ackButton) {
+                    ackButton.remove();
+                }
+            }
+            
+            // Mostrar mensagem de sucesso
+            showToast('success', data.message);
+        } else {
+            showToast('error', data.error || 'Erro ao reconhecer alerta');
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        showToast('error', 'Erro de conexão ao reconhecer alerta');
+    });
+}
+
+// Função para resolver alerta
+function resolveAlert(alertId) {
+    if (!confirm('Tem certeza que deseja resolver este alerta?')) {
+        return;
+    }
+    
+    fetch(`/reports/alerts/${alertId}/resolve/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCSRFToken(),
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'action=resolve'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Remover alerta da lista
+            const alertElement = document.getElementById(`alert-${alertId}`);
+            if (alertElement) {
+                alertElement.style.transition = 'opacity 0.3s ease';
+                alertElement.style.opacity = '0';
+                setTimeout(() => {
+                    alertElement.remove();
+                    
+                    // Verificar se ainda há alertas
+                    const remainingAlerts = document.querySelectorAll('[id^="alert-"]');
+                    if (remainingAlerts.length === 0) {
+                        location.reload(); // Recarregar para mostrar mensagem "nenhum alerta"
+                    }
+                }, 300);
+            }
+            
+            showToast('success', data.message);
+        } else {
+            showToast('error', data.error || 'Erro ao resolver alerta');
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        showToast('error', 'Erro de conexão ao resolver alerta');
+    });
+}
+
+// Função para visualizar detalhes relacionados ao alerta
+function viewRelated(alertType, alertId) {
+    switch(alertType) {
+        case 'low_balance':
+            window.location.href = '/transactions/accounts/';
+            break;
+        case 'goal_deadline':
+            window.location.href = '/transactions/goals/';
+            break;
+        case 'overdue_transaction':
+            window.location.href = '/transactions/?status=pending';
+            break;
+        case 'unusual_expense':
+            window.location.href = '/transactions/?type=expense';
+            break;
+        case 'cash_flow_negative':
+            window.location.href = '/core/insights/';
+            break;
+        default:
+            window.location.href = '/core/';
+    }
+}
+
+// Função para mostrar notificações toast
+function showToast(type, message) {
+    // Criar elemento toast
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    
+    toast.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Remover automaticamente após 5 segundos
+    setTimeout(() => {
+        toast.remove();
+    }, 5000);
+}
+
+// Adicionar token CSRF se não existir
+document.addEventListener('DOMContentLoaded', function() {
+    if (!document.querySelector('[name=csrfmiddlewaretoken]') && !document.querySelector('meta[name="csrf-token"]')) {
+        // Buscar token CSRF via cookie
+        const csrfToken = document.cookie.split(';')
+            .find(cookie => cookie.trim().startsWith('csrftoken='))
+            ?.split('=')[1];
+        
+        if (csrfToken) {
+            const meta = document.createElement('meta');
+            meta.name = 'csrf-token';
+            meta.content = csrfToken;
+            document.head.appendChild(meta);
+        }
+    }
+});
+</script>
+</div>
+{% endblock %}

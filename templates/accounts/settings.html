@@ -1,0 +1,518 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Configurações - CashFlow Manager{% endblock %}
+
+{% block extra_css %}
+<style>
+    .settings-header {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+    }
+    .nav-pills .nav-link {
+        border-radius: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    .nav-pills .nav-link.active {
+        background-color: #28a745;
+    }
+    .card {
+        border: none;
+        box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+        margin-bottom: 1.5rem;
+    }
+    .user-card {
+        transition: transform 0.2s;
+    }
+    .user-card:hover {
+        transform: translateY(-2px);
+    }
+    .role-badge {
+        font-size: 0.75rem;
+    }
+    .sidebar-nav {
+        position: sticky;
+        top: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Settings Header -->
+<div class="settings-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-1">
+                    <i class="fas fa-cogs me-3"></i>Configurações
+                </h1>
+                <p class="mb-0">Gerencie sua empresa e usuários</p>
+            </div>
+            <div class="col-md-4 text-end">
+                {% if current_company %}
+                <h5 class="mb-0">{{ current_company.name }}</h5>
+                <small>{{ user_role|title }}</small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <!-- Sidebar Navigation -->
+        <div class="col-md-3">
+            <div class="sidebar-nav">
+                <ul class="nav nav-pills flex-column" id="settingsTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active w-100 text-start" id="company-tab" data-bs-toggle="pill" data-bs-target="#company" type="button" role="tab">
+                            <i class="fas fa-building me-2"></i>Empresa
+                        </button>
+                    </li>
+                    {% if can_manage_users %}
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link w-100 text-start" id="users-tab" data-bs-toggle="pill" data-bs-target="#users" type="button" role="tab">
+                            <i class="fas fa-users me-2"></i>Usuários
+                        </button>
+                    </li>
+                    {% endif %}
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link w-100 text-start" id="permissions-tab" data-bs-toggle="pill" data-bs-target="#permissions" type="button" role="tab">
+                            <i class="fas fa-shield-alt me-2"></i>Permissões
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link w-100 text-start" id="system-tab" data-bs-toggle="pill" data-bs-target="#system" type="button" role="tab">
+                            <i class="fas fa-server me-2"></i>Sistema
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <div class="tab-content" id="settingsTabsContent">
+                
+                <!-- Configurações da Empresa -->
+                <div class="tab-pane fade show active" id="company" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-building me-2"></i>Informações da Empresa
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if can_edit_company %}
+                            <form method="post" action="{% url 'accounts:company_settings' %}" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="{{ company_form.name.id_for_label }}" class="form-label">Nome da Empresa</label>
+                                        {{ company_form.name }}
+                                        {% if company_form.name.errors %}
+                                            <div class="text-danger">{{ company_form.name.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="{{ company_form.cnpj.id_for_label }}" class="form-label">CNPJ</label>
+                                        {{ company_form.cnpj }}
+                                        {% if company_form.cnpj.errors %}
+                                            <div class="text-danger">{{ company_form.cnpj.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="{{ company_form.email.id_for_label }}" class="form-label">Email</label>
+                                        {{ company_form.email }}
+                                        {% if company_form.email.errors %}
+                                            <div class="text-danger">{{ company_form.email.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="{{ company_form.phone.id_for_label }}" class="form-label">Telefone</label>
+                                        {{ company_form.phone }}
+                                        {% if company_form.phone.errors %}
+                                            <div class="text-danger">{{ company_form.phone.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="{{ company_form.address.id_for_label }}" class="form-label">Endereço</label>
+                                    {{ company_form.address }}
+                                    {% if company_form.address.errors %}
+                                        <div class="text-danger">{{ company_form.address.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="mb-3">
+                                    <label for="{{ company_form.primary_color.id_for_label }}" class="form-label">Cor Primária</label>
+                                    {{ company_form.primary_color }}
+                                    {% if company_form.primary_color.errors %}
+                                        <div class="text-danger">{{ company_form.primary_color.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save me-2"></i>Salvar Alterações
+                                </button>
+                            </form>
+                            {% else %}
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Você não tem permissão para editar as configurações da empresa.
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Nome:</strong> {{ current_company.name }}</p>
+                                    <p><strong>CNPJ:</strong> {{ current_company.cnpj|default:"Não informado" }}</p>
+                                    <p><strong>Email:</strong> {{ current_company.email|default:"Não informado" }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Telefone:</strong> {{ current_company.phone|default:"Não informado" }}</p>
+                                    <p><strong>Criado em:</strong> {{ current_company.created_at|date:"d/m/Y" }}</p>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gerenciamento de Usuários -->
+                {% if can_manage_users %}
+                <div class="tab-pane fade" id="users" role="tabpanel">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5>
+                            <i class="fas fa-users me-2"></i>Usuários da Empresa
+                        </h5>
+                        <div>
+                            <a href="{% url 'accounts:create_user' %}" class="btn btn-primary">
+                                <i class="fas fa-user-plus me-2"></i>Novo Usuário
+                            </a>
+                            <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#addMemberModal">
+                                <i class="fas fa-user-friends me-2"></i>Adicionar Membro
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Lista de Usuários -->
+                    <div class="row">
+                        {% for member in company_members %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card user-card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <h6 class="card-title mb-1">
+                                                {{ member.user.get_full_name|default:member.user.username }}
+                                            </h6>
+                                            <p class="card-text text-muted mb-1">
+                                                <small>{{ member.user.email }}</small>
+                                            </p>
+                                            <span class="badge bg-primary role-badge">
+                                                {{ member.get_role_display }}
+                                            </span>
+                                            {% if not member.is_active %}
+                                                <span class="badge bg-secondary role-badge">Inativo</span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                                                <i class="fas fa-ellipsis-v"></i>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li>
+                                                    <a class="dropdown-item" href="{% url 'accounts:edit_user' member.user.id %}">
+                                                        <i class="fas fa-edit me-2"></i>Editar
+                                                    </a>
+                                                </li>
+                                                {% if member.role != 'owner' and member.user != user %}
+                                                <li>
+                                                    <a class="dropdown-item text-danger remove-user-btn" href="#" 
+                                                       data-user-name="{{ member.user.get_full_name|default:member.user.username }}"
+                                                       data-member-id="{{ member.id }}">
+                                                        <i class="fas fa-user-times me-2"></i>Remover
+                                                    </a>
+                                                </li>
+                                                {% endif %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2">
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar me-1"></i>
+                                            Desde {{ member.joined_at|date:"d/m/Y" }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12">
+                            <div class="text-center text-muted py-4">
+                                <i class="fas fa-users fa-3x mb-3"></i>
+                                <p>Nenhum usuário encontrado.</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Permissões -->
+                <div class="tab-pane fade" id="permissions" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-shield-alt me-2"></i>Níveis de Acesso
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Função</th>
+                                            <th>Descrição</th>
+                                            <th>Permissões</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><span class="badge bg-danger">Proprietário</span></td>
+                                            <td>Dono da empresa</td>
+                                            <td>
+                                                <small>
+                                                    • Acesso total ao sistema<br>
+                                                    • Gerenciar usuários e configurações<br>
+                                                    • Excluir empresa
+                                                </small>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><span class="badge bg-warning">Administrador</span></td>
+                                            <td>Administrador da empresa</td>
+                                            <td>
+                                                <small>
+                                                    • Gerenciar usuários<br>
+                                                    • Configurações da empresa<br>
+                                                    • Todos os relatórios
+                                                </small>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><span class="badge bg-info">Gerente</span></td>
+                                            <td>Gerente operacional</td>
+                                            <td>
+                                                <small>
+                                                    • Criar e editar transações<br>
+                                                    • Visualizar relatórios<br>
+                                                    • Gerenciar metas
+                                                </small>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><span class="badge bg-primary">Usuário</span></td>
+                                            <td>Usuário básico</td>
+                                            <td>
+                                                <small>
+                                                    • Visualizar dashboard<br>
+                                                    • Criar transações básicas<br>
+                                                    • Relatórios limitados
+                                                </small>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Configurações do Sistema -->
+                <div class="tab-pane fade" id="system" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-server me-2"></i>Informações do Sistema
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Estatísticas da Empresa</h6>
+                                    <ul class="list-unstyled">
+                                        <li><strong>Total de usuários:</strong> {{ company_members.count }}</li>
+                                        <li><strong>Usuários ativos:</strong> {{ active_users_count }}</li>
+                                        <li><strong>Data de criação:</strong> {{ current_company.created_at|date:"d/m/Y" }}</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Configurações Avançadas</h6>
+                                    {% if user_role == 'owner' %}
+                                    <div class="d-grid gap-2">
+                                        <button type="button" class="btn btn-outline-warning btn-sm" onclick="alert('Funcionalidade em desenvolvimento')">
+                                            <i class="fas fa-download me-2"></i>Backup de Dados
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="alert('Funcionalidade em desenvolvimento')">
+                                            <i class="fas fa-trash me-2"></i>Excluir Empresa
+                                        </button>
+                                    </div>
+                                    {% else %}
+                                    <p class="text-muted">Disponível apenas para proprietários.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Criar Usuário -->
+{% if can_manage_users %}
+<div class="modal fade" id="createUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-user-plus me-2"></i>Criar Novo Usuário
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'accounts:create_user' %}">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <!-- Formulário será carregado via JavaScript -->
+                    <div id="createUserForm">
+                        <div class="text-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Carregando...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Criar Usuário
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Adicionar Membro -->
+<div class="modal fade" id="addMemberModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-user-friends me-2"></i>Adicionar Membro Existente
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'accounts:add_member' %}">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <!-- Formulário será carregado via JavaScript -->
+                    <div id="addMemberForm">
+                        <div class="text-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Carregando...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-user-plus me-2"></i>Adicionar Membro
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Event listener para remoção de usuários
+document.addEventListener('DOMContentLoaded', function() {
+    // Configurar event listeners para botões de remoção
+    document.querySelectorAll('.remove-user-btn').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const userName = this.getAttribute('data-user-name');
+            const memberId = this.getAttribute('data-member-id');
+            confirmRemoveUser(userName, memberId);
+        });
+    });
+});
+
+function confirmRemoveUser(userName, memberId) {
+    if (confirm(`Tem certeza que deseja remover ${userName} da empresa?`)) {
+        // Criar form para remoção
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{% url "accounts:remove_member" 0 %}'.replace('0', memberId);
+        
+        // Adicionar CSRF token
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        form.appendChild(csrfInput);
+        
+        // Submeter form
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Carregar formulários via AJAX
+document.addEventListener('DOMContentLoaded', function() {
+    // Carregar formulário de criar usuário
+    const createUserModal = document.getElementById('createUserModal');
+    if (createUserModal) {
+        createUserModal.addEventListener('shown.bs.modal', function() {
+            // Implementar carregamento do formulário via AJAX
+        });
+    }
+    
+    // Carregar formulário de adicionar membro
+    const addMemberModal = document.getElementById('addMemberModal');
+    if (addMemberModal) {
+        addMemberModal.addEventListener('shown.bs.modal', function() {
+            // Implementar carregamento do formulário via AJAX
+        });
+    }
+});
+
+// Manter a aba ativa após reload
+const hash = window.location.hash;
+if (hash) {
+    const tabTrigger = document.querySelector(`button[data-bs-target="${hash}"]`);
+    if (tabTrigger) {
+        const tab = new bootstrap.Tab(tabTrigger);
+        tab.show();
+    }
+}
+
+// Salvar aba ativa no hash da URL
+const tabButtons = document.querySelectorAll('#settingsTabs button[data-bs-toggle="pill"]');
+tabButtons.forEach(button => {
+    button.addEventListener('shown.bs.tab', function(e) {
+        const target = e.target.getAttribute('data-bs-target');
+        window.history.replaceState(null, null, target);
+    });
+});
+</script>
+{% endblock %}

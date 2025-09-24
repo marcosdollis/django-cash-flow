@@ -1,0 +1,269 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalhes da Transação - CashFlow Manager{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <h4 class="mb-0">
+                <i class="fas fa-eye me-2"></i>Detalhes da Transação
+            </h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <!-- Informações Principais -->
+                <div class="col-md-8">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>Informações Gerais</h5>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <tr>
+                                        <th width="40%">Descrição:</th>
+                                        <td>{{ transaction.description }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Tipo:</th>
+                                        <td>
+                                            <span class="badge {% if transaction.transaction_type == 'income' %}bg-success{% else %}bg-danger{% endif %}">
+                                                {{ transaction.get_transaction_type_display }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Valor:</th>
+                                        <td>
+                                            <h5 class="mb-0 {% if transaction.transaction_type == 'income' %}text-success{% else %}text-danger{% endif %}">
+                                                R$ {{ transaction.amount|floatformat:2 }}
+                                            </h5>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Data:</th>
+                                        <td>{{ transaction.transaction_date|date:"d/m/Y" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Categoria:</th>
+                                        <td>
+                                            {% if transaction.category %}
+                                                <span class="badge bg-secondary">{{ transaction.category.name }}</span>
+                                            {% else %}
+                                                <em class="text-muted">Sem categoria</em>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Conta:</th>
+                                        <td>{{ transaction.account.name }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h5>Status e Controle</h5>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <tr>
+                                        <th width="40%">Status Atual:</th>
+                                        <td>
+                                            <span class="badge bg-{% if transaction.status == 'completed' %}success{% elif transaction.status == 'pending' %}warning{% elif transaction.status == 'cancelled' %}danger{% else %}secondary{% endif %}">
+                                                {{ transaction.get_status_display }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Criado por:</th>
+                                        <td>{{ transaction.created_by.first_name|default:transaction.created_by.username }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Criado em:</th>
+                                        <td>{{ transaction.created_at|date:"d/m/Y H:i" }}</td>
+                                    </tr>
+                                    {% if transaction.updated_at != transaction.created_at %}
+                                    <tr>
+                                        <th>Última atualização:</th>
+                                        <td>{{ transaction.updated_at|date:"d/m/Y H:i" }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if transaction.due_date %}
+                                    <tr>
+                                        <th>Vencimento:</th>
+                                        <td>
+                                            {{ transaction.due_date|date:"d/m/Y" }}
+                                            {% if transaction.due_date < today and transaction.status == 'pending' %}
+                                                <span class="badge bg-danger ms-1">Vencida</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Observações -->
+                    {% if transaction.notes %}
+                    <div class="mb-4">
+                        <h5>Observações</h5>
+                        <div class="border p-3 rounded bg-light">
+                            {{ transaction.notes|linebreaks }}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Anexos -->
+                    {% if transaction.attachment %}
+                    <div class="mb-4">
+                        <h5>Anexo</h5>
+                        <div class="border p-3 rounded">
+                            <i class="fas fa-paperclip me-2"></i>
+                            <a href="{{ transaction.attachment.url }}" target="_blank">
+                                Ver anexo
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Ações -->
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-cog me-2"></i>Ações
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <!-- Alterar Status -->
+                            <div class="mb-3">
+                                <label class="form-label">Alterar Status:</label>
+                                <form method="post" action="{% url 'transactions:update_status' transaction.uuid %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <div class="input-group mb-2">
+                                        <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                                            <option value="pending" {% if transaction.status == 'pending' %}selected{% endif %}>Pendente</option>
+                                            <option value="completed" {% if transaction.status == 'completed' %}selected{% endif %}>Concluída</option>
+                                            <option value="cancelled" {% if transaction.status == 'cancelled' %}selected{% endif %}>Cancelada</option>
+                                        </select>
+                                        <button type="submit" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                            
+                            <hr>
+                            
+                            <!-- Botões de Ação -->
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'transactions:update' transaction.uuid %}" class="btn btn-warning btn-sm">
+                                    <i class="fas fa-edit me-1"></i>Editar
+                                </a>
+                                
+                                {% if transaction.status == 'pending' %}
+                                <button type="button" class="btn btn-success btn-sm" onclick="updateStatus('{{ transaction.uuid }}', 'completed')">
+                                    <i class="fas fa-check me-1"></i>Marcar como Concluída
+                                </button>
+                                {% endif %}
+                                
+                                {% if transaction.status != 'cancelled' %}
+                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="updateStatus('{{ transaction.uuid }}', 'cancelled')">
+                                    <i class="fas fa-times me-1"></i>Cancelar
+                                </button>
+                                {% endif %}
+                                
+                                <hr>
+                                
+                                <button type="button" class="btn btn-danger btn-sm" onclick="deleteTransaction('{{ transaction.uuid }}')">
+                                    <i class="fas fa-trash me-1"></i>Excluir
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Informações Adicionais -->
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-info-circle me-2"></i>Informações
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <small class="text-muted">
+                                <strong>ID:</strong> {{ transaction.uuid }}<br>
+                                <strong>Empresa:</strong> {{ transaction.company.name }}<br>
+                                {% if transaction.transaction_type == 'expense' and transaction.status == 'completed' %}
+                                <strong>Impacto no Saldo:</strong> -R$ {{ transaction.amount|floatformat:2 }}<br>
+                                {% elif transaction.transaction_type == 'income' and transaction.status == 'completed' %}
+                                <strong>Impacto no Saldo:</strong> +R$ {{ transaction.amount|floatformat:2 }}<br>
+                                {% endif %}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Botões de Navegação -->
+            <div class="row mt-4">
+                <div class="col">
+                    <a href="{% url 'transactions:list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Voltar para Lista
+                    </a>
+                    <a href="{% url 'transactions:create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>Nova Transação
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateStatus(transactionId, status) {
+    if (confirm('Tem certeza que deseja alterar o status da transação?')) {
+        const form = document.createElement('form');
+        form.method = 'post';
+        form.action = `/transactions/${transactionId}/status/`;
+        
+        const csrfToken = document.createElement('input');
+        csrfToken.type = 'hidden';
+        csrfToken.name = 'csrfmiddlewaretoken';
+        csrfToken.value = '{{ csrf_token }}';
+        form.appendChild(csrfToken);
+        
+        const statusInput = document.createElement('input');
+        statusInput.type = 'hidden';
+        statusInput.name = 'status';
+        statusInput.value = status;
+        form.appendChild(statusInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function deleteTransaction(transactionId) {
+    if (confirm('Tem certeza que deseja EXCLUIR esta transação? Esta ação não pode ser desfeita.')) {
+        const form = document.createElement('form');
+        form.method = 'post';
+        form.action = `/transactions/${transactionId}/delete/`;
+        
+        const csrfToken = document.createElement('input');
+        csrfToken.type = 'hidden';
+        csrfToken.name = 'csrfmiddlewaretoken';
+        csrfToken.value = '{{ csrf_token }}';
+        form.appendChild(csrfToken);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Adicionar variável today para comparação de datas vencidas
+const today = new Date().toISOString().split('T')[0];
+</script>
+{% endblock %}

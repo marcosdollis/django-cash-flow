@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+
+{% block title %}Metas - CashFlow Manager{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>
+                <i class="fas fa-bullseye me-2"></i>Metas Financeiras
+            </h2>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'transactions:goal_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>Nova Meta
+            </a>
+        </div>
+    </div>
+
+    {% if goals %}
+    <div class="row">
+        {% for goal in goals %}
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h5 class="card-title">
+                            <i class="fas fa-bullseye me-2 text-primary"></i>
+                            {{ goal.title }}
+                        </h5>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'transactions:goal_update' goal.pk %}">
+                                        <i class="fas fa-edit me-2"></i>Editar
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="#" onclick="deleteGoal({{ goal.pk }})">
+                                        <i class="fas fa-trash me-2"></i>Excluir
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    {% if goal.description %}
+                    <p class="card-text text-muted">{{ goal.description }}</p>
+                    {% endif %}
+                    
+                    <!-- Barra de progresso -->
+                    {% with progress_percentage=goal.progress_percentage %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small class="text-muted">Progresso</small>
+                            <small class="text-muted">{{ progress_percentage|floatformat:0 }}%</small>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar 
+                                {% if progress_percentage >= 100 %}bg-success
+                                {% elif progress_percentage >= 75 %}bg-info
+                                {% elif progress_percentage >= 50 %}bg-warning
+                                {% else %}bg-danger{% endif %}" 
+                                role="progressbar" 
+                                style="width: {{ progress_percentage }}%" 
+                                aria-valuenow="{{ progress_percentage }}" 
+                                aria-valuemin="0" 
+                                aria-valuemax="100">
+                            </div>
+                        </div>
+                    </div>
+                    {% endwith %}
+                    
+                    <!-- Valores -->
+                    <div class="row text-center mb-3">
+                        <div class="col-6">
+                            <div class="border-end">
+                                <h6 class="text-muted mb-1">Atual</h6>
+                                <h6 class="mb-0 text-primary">
+                                    R$ {{ goal.current_amount|floatformat:2 }}
+                                </h6>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="text-muted mb-1">Meta</h6>
+                            <h6 class="mb-0">R$ {{ goal.target_amount|floatformat:2 }}</h6>
+                        </div>
+                    </div>
+                    
+                    <!-- Datas e status -->
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="badge bg-{{ goal.get_status_display|lower }}">
+                            {{ goal.get_status_display }}
+                        </span>
+                        {% if goal.target_date %}
+                        <small class="text-muted">
+                            <i class="fas fa-calendar me-1"></i>
+                            {{ goal.target_date|date:"d/m/Y" }}
+                        </small>
+                        {% endif %}
+                    </div>
+                    
+                    {% if goal.category %}
+                    <div class="mt-2">
+                        <small class="text-muted">
+                            <i class="fas fa-tag me-1"></i>{{ goal.category.name }}
+                        </small>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Indicador de urgência -->
+                    {% if goal.target_date %}
+                    {% with days_remaining=goal.days_remaining %}
+                    {% if days_remaining < 30 and goal.progress_percentage < 80 %}
+                    <div class="alert alert-warning alert-sm mt-2 mb-0" role="alert">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        {% if days_remaining > 0 %}
+                        Restam {{ days_remaining }} dias
+                        {% else %}
+                        Meta vencida
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    {% else %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-bullseye fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">Nenhuma meta encontrada</h4>
+            <p class="text-muted">Defina suas primeiras metas financeiras para acompanhar seu progresso.</p>
+            <a href="{% url 'transactions:goal_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>Criar Primeira Meta
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal de confirmação para exclusão -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja excluir esta meta?</p>
+                <p class="text-muted">Esta ação não pode ser desfeita.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmDelete">Excluir</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function deleteGoal(goalId) {
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    const confirmBtn = document.getElementById('confirmDelete');
+    
+    confirmBtn.onclick = function() {
+        // Aqui você implementaria a exclusão via AJAX
+        // Por enquanto, vamos redirecionar para uma URL de exclusão
+        window.location.href = `/transactions/goals/${goalId}/delete/`;
+    };
+    
+    modal.show();
+}
+</script>
+{% endblock %}

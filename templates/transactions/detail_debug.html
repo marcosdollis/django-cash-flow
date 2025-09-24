@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Debug - Detalhes da Transação{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <h4 class="mb-0">
+                <i class="fas fa-eye me-2"></i>Debug - Detalhes da Transação
+            </h4>
+        </div>
+        <div class="card-body">
+            <p><strong>UUID:</strong> {{ transaction.uuid }}</p>
+            <p><strong>Descrição:</strong> {{ transaction.description }}</p>
+            <p><strong>Valor:</strong> R$ {{ transaction.amount|floatformat:2 }}</p>
+            <p><strong>Status:</strong> 
+                <span class="badge bg-{% if transaction.status == 'completed' %}success{% elif transaction.status == 'pending' %}warning{% else %}danger{% endif %}">
+                    {{ transaction.status }}
+                </span>
+            </p>
+            
+            <hr>
+            
+            <!-- Teste das URLs uma por uma -->
+            <h5>Teste de URLs:</h5>
+            
+            <p>1. Lista de transações: 
+                <a href="{% url 'transactions:list' %}" class="btn btn-sm btn-info">OK</a>
+            </p>
+            
+            <p>2. Criar transação: 
+                <a href="{% url 'transactions:create' %}" class="btn btn-sm btn-success">OK</a>
+            </p>
+            
+            <p>3. Editar transação: 
+                <a href="{% url 'transactions:update' transaction.uuid %}" class="btn btn-sm btn-warning">OK</a>
+            </p>
+            
+            <p>4. Alterar status (form): 
+                <form method="post" action="{% url 'transactions:update_status' transaction.uuid %}" style="display: inline;">
+                    {% csrf_token %}
+                    <select name="status" onchange="this.form.submit()">
+                        <option value="pending" {% if transaction.status == 'pending' %}selected{% endif %}>Pendente</option>
+                        <option value="completed" {% if transaction.status == 'completed' %}selected{% endif %}>Concluída</option>
+                        <option value="cancelled" {% if transaction.status == 'cancelled' %}selected{% endif %}>Cancelada</option>
+                    </select>
+                    <button type="submit" class="btn btn-sm btn-primary">Alterar</button>
+                </form>
+            </p>
+            
+            <p>5. Excluir transação: 
+                <a href="{% url 'transactions:delete' transaction.uuid %}" class="btn btn-sm btn-danger">Excluir</a>
+            </p>
+            
+            <hr>
+            
+            <a href="{% url 'transactions:list' %}" class="btn btn-secondary">Voltar</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

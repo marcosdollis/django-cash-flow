@@ -1,0 +1,20 @@
+databases:
+  - name: django-cash-flow-db
+    databaseName: cashflow_db
+    user: cashflow_user
+    
+services:
+  - type: web
+    name: django-cash-flow
+    env: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn cashflow_manager.wsgi:application"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: django-cash-flow-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: WEB_CONCURRENCY
+        value: 4

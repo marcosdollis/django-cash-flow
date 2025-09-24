@@ -1,0 +1,608 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - CashFlow Manager{% endblock %}
+
+{% block extra_css %}
+<style>
+.card-metric {
+    border-left: 4px solid;
+    transition: transform 0.2s;
+}
+
+.card-metric:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.metric-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+}
+
+.table-responsive {
+    max-height: 400px;
+}
+
+.alert-item {
+    border-left: 4px solid;
+    margin-bottom: 8px;
+}
+
+.goal-progress {
+    height: 8px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header com Filtros -->
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="mb-0">
+                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+            </h2>
+            <p class="text-muted">
+                Período: {{ start_date|date:"d/m/Y" }} - {{ end_date|date:"d/m/Y" }} 
+                ({{ period_days }} dias)
+            </p>
+        </div>
+        <div class="col-auto">
+            <div class="btn-group" role="group">
+                <a href="{% url 'core:insights' %}" class="btn btn-success">
+                    <i class="fas fa-brain me-1"></i>Insights IA
+                    <span class="badge bg-light text-dark ms-1">Premium</span>
+                </a>
+                <a href="{% url 'transactions:create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>Nova Transação
+                </a>
+                <a href="{% url 'reports:generate' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-chart-bar me-1"></i>Relatório
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros de Data -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-filter me-2"></i>Filtros de Período
+                    </h6>
+                </div>
+                <div class="card-body py-3">
+                    <form method="get" action="{% url 'core:dashboard' %}" class="row g-3">
+                        <!-- Períodos Pré-definidos -->
+                        <div class="col-md-3">
+                            <label class="form-label">Período Rápido:</label>
+                            <select name="period" class="form-select" onchange="this.form.submit()">
+                                <option value="7" {% if current_filters.period == '7' %}selected{% endif %}>Últimos 7 dias</option>
+                                <option value="30" {% if current_filters.period == '30' %}selected{% endif %}>Últimos 30 dias</option>
+                                <option value="60" {% if current_filters.period == '60' %}selected{% endif %}>Últimos 60 dias</option>
+                                <option value="90" {% if current_filters.period == '90' %}selected{% endif %}>Últimos 90 dias</option>
+                                <option value="365" {% if current_filters.period == '365' %}selected{% endif %}>Último ano</option>
+                                <option value="next_30" {% if current_filters.period == 'next_30' %}selected{% endif %}>Próximos 30 dias</option>
+                                <option value="next_60" {% if current_filters.period == 'next_60' %}selected{% endif %}>Próximos 60 dias</option>
+                                <option value="custom" {% if current_filters.start_date %}selected{% endif %}>Personalizado</option>
+                            </select>
+                        </div>
+
+                        <!-- Data Inicial -->
+                        <div class="col-md-3">
+                            <label class="form-label">Data Inicial:</label>
+                            <input type="date" name="start_date" class="form-control" 
+                                   value="{{ current_filters.start_date }}">
+                        </div>
+
+                        <!-- Data Final -->
+                        <div class="col-md-3">
+                            <label class="form-label">Data Final:</label>
+                            <input type="date" name="end_date" class="form-control" 
+                                   value="{{ current_filters.end_date }}">
+                        </div>
+
+                        <!-- Botões -->
+                        <div class="col-md-3 d-flex align-items-end">
+                            <div class="btn-group w-100">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search me-1"></i>Filtrar
+                                </button>
+                                <a href="{% url 'core:dashboard' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-1"></i>Limpar
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Métricas Principais -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card card-metric border-success h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="metric-icon bg-success text-white me-3">
+                        <i class="fas fa-arrow-up"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-0">Receitas</h6>
+                        <h4 class="mb-0 text-success">R$ {{ total_income|floatformat:2 }}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card card-metric border-danger h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="metric-icon bg-danger text-white me-3">
+                        <i class="fas fa-arrow-down"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-0">Despesas</h6>
+                        <h4 class="mb-0 text-danger">R$ {{ total_expense|floatformat:2 }}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card card-metric border-{% if net_income >= 0 %}success{% else %}danger{% endif %} h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="metric-icon bg-{% if net_income >= 0 %}success{% else %}danger{% endif %} text-white me-3">
+                        <i class="fas fa-{% if net_income >= 0 %}chart-line{% else %}chart-line-down{% endif %}"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-0">Resultado</h6>
+                        <h4 class="mb-0 text-{% if net_income >= 0 %}success{% else %}danger{% endif %}">
+                            R$ {{ net_income|floatformat:2 }}
+                        </h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card card-metric border-primary h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="metric-icon bg-primary text-white me-3">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-0">Saldo Total</h6>
+                        <h4 class="mb-0 text-primary">R$ {{ total_balance|floatformat:2 }}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos e Conteúdo Principal -->
+    <div class="row">
+        <!-- Gráfico Principal -->
+        <div class="col-lg-8">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-area me-2"></i>Fluxo de Caixa
+                    </h5>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <input type="radio" class="btn-check" name="chartPeriod" id="period7" value="7">
+                        <label class="btn btn-outline-primary" for="period7">7d</label>
+                        
+                        <input type="radio" class="btn-check" name="chartPeriod" id="period30" value="30" checked>
+                        <label class="btn btn-outline-primary" for="period30">30d</label>
+                        
+                        <input type="radio" class="btn-check" name="chartPeriod" id="period90" value="90">
+                        <label class="btn btn-outline-primary" for="period90">90d</label>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="cashFlowChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Resumo de Contas -->
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-university me-2"></i>Saldo por Conta
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for account in accounts %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ account.name }}</strong>
+                                <br>
+                                <small class="text-muted">{{ account.get_account_type_display }}</small>
+                            </div>
+                            <span class="badge bg-{% if account.current_balance >= 0 %}success{% else %}danger{% endif %} rounded-pill">
+                                R$ {{ account.current_balance|floatformat:2 }}
+                            </span>
+                        </div>
+                        {% empty %}
+                        <div class="list-group-item text-center text-muted py-4">
+                            <i class="fas fa-plus-circle fa-2x mb-2"></i>
+                            <br>
+                            <a href="{% url 'transactions:account_create' %}" class="btn btn-sm btn-primary">
+                                Adicionar Conta
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seção Inferior -->
+    <div class="row mt-4">
+        <!-- Transações Recentes -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history me-2"></i>Transações Recentes
+                    </h5>
+                    <a href="{% url 'transactions:list' %}" class="btn btn-sm btn-outline-primary">
+                        Ver Todas
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <tbody>
+                                {% for transaction in recent_transactions %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-3">
+                                                <i class="fas fa-{% if transaction.transaction_type == 'income' %}arrow-up text-success{% else %}arrow-down text-danger{% endif %}"></i>
+                                            </div>
+                                            <div>
+                                                <strong>{{ transaction.description }}</strong>
+                                                <br>
+                                                <small class="text-muted">
+                                                    {{ transaction.account.name }} • {{ transaction.transaction_date }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-end">
+                                        <strong class="text-{% if transaction.transaction_type == 'income' %}success{% else %}danger{% endif %}">
+                                            {% if transaction.transaction_type == 'income' %}+{% else %}-{% endif %}R$ {{ transaction.amount|floatformat:2 }}
+                                        </strong>
+                                        <br>
+                                        <span class="badge bg-{% if transaction.status == 'completed' %}success{% elif transaction.status == 'pending' %}warning{% else %}secondary{% endif %}">
+                                            {{ transaction.get_status_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="2" class="text-center text-muted py-4">
+                                        <i class="fas fa-inbox fa-2x mb-2"></i>
+                                        <br>
+                                        Nenhuma transação encontrada
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Insights Premium -->
+        {% if insights %}
+        <div class="col-lg-6">
+            <div class="card mb-3" style="border-left: 4px solid #28a745;">
+                <div class="card-header d-flex justify-content-between align-items-center bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-brain text-success me-2"></i>Insights Inteligentes
+                    </h5>
+                    <div>
+                        <span class="badge bg-success me-2">Premium</span>
+                        <a href="{% url 'core:insights' %}" class="btn btn-sm btn-outline-success">
+                            Ver Detalhes
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Score de Saúde -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h6 class="mb-0">Saúde Financeira</h6>
+                            <small class="text-muted">Score baseado em IA</small>
+                        </div>
+                        <div class="text-end">
+                            <span class="h4 {% if insights.health_score >= 80 %}text-success{% elif insights.health_score >= 60 %}text-info{% elif insights.health_score >= 40 %}text-warning{% else %}text-danger{% endif %}">
+                                {{ insights.health_score }}
+                            </span>
+                            <small class="text-muted">/100</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Previsão Resumida -->
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h6 class="text-muted mb-0">Próximos 30 dias</h6>
+                            <small class="{% if insights.forecast.net_flow >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                R$ {{ insights.forecast.net_flow|floatformat:2 }}
+                            </small>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="text-muted mb-0">Alertas Ativos</h6>
+                            <small class="text-warning">
+                                {{ insights.spending_spikes|length|add:insights.balance_risks|length }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Metas e Alertas -->
+        <div class="col-lg-6">
+            <!-- Metas -->
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bullseye me-2"></i>Metas Ativas
+                    </h5>
+                    <a href="{% url 'transactions:goal_list' %}" class="btn btn-sm btn-outline-primary">
+                        Ver Todas
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% for goal in active_goals %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <strong>{{ goal.name }}</strong>
+                            <small class="text-muted">{{ goal.progress_percentage|floatformat:1 }}%</small>
+                        </div>
+                        <div class="progress goal-progress">
+                            <div class="progress-bar bg-{% if goal.progress_percentage >= 100 %}success{% elif goal.progress_percentage >= 75 %}info{% elif goal.progress_percentage >= 50 %}warning{% else %}danger{% endif %}" 
+                                 style="width: {{ goal.progress_percentage }}%"></div>
+                        </div>
+                        <small class="text-muted">
+                            R$ {{ goal.current_amount|floatformat:2 }} de R$ {{ goal.target_amount|floatformat:2 }}
+                            <span class="badge bg-light text-dark ms-2">Meta: {{ goal.start_date|date:"d/m/Y" }} - {{ goal.target_date|date:"d/m/Y" }}</span>
+                        </small>
+                    </div>
+                    {% empty %}
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-target fa-2x mb-2"></i>
+                        <br>
+                        <a href="{% url 'transactions:goal_create' %}" class="btn btn-sm btn-primary">
+                            Criar Meta
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Alertas -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Alertas
+                    </h5>
+                    <a href="{% url 'reports:alert_list' %}" class="btn btn-sm btn-outline-primary">
+                        Ver Todos
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% for alert in active_alerts %}
+                    <div class="alert-item alert alert-{% if alert.severity == 'critical' %}danger{% elif alert.severity == 'high' %}warning{% elif alert.severity == 'medium' %}info{% else %}secondary{% endif %} py-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ alert.title }}</strong>
+                                <br>
+                                <small>{{ alert.message|truncatechars:60 }}</small>
+                            </div>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="acknowledgeAlert({{ alert.id }})">
+                                <i class="fas fa-check"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                        <br>
+                        Nenhum alerta ativo
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Dados do gráfico
+const chartData = {{ chart_data|safe }};
+
+// Configurar gráfico de fluxo de caixa
+const ctx = document.getElementById('cashFlowChart').getContext('2d');
+const cashFlowChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: chartData.daily.map(d => {
+            // Adicionar 'T00:00:00' para forçar interpretação como horário local
+            const localDate = new Date(d.date + 'T00:00:00');
+            return localDate.toLocaleDateString('pt-BR');
+        }),
+        datasets: [{
+            label: 'Receitas',
+            data: chartData.daily.map(d => d.income),
+            borderColor: 'rgb(75, 192, 192)',
+            backgroundColor: 'rgba(75, 192, 192, 0.1)',
+            tension: 0.4,
+            fill: true
+        }, {
+            label: 'Despesas',
+            data: chartData.daily.map(d => d.expense),
+            borderColor: 'rgb(255, 99, 132)',
+            backgroundColor: 'rgba(255, 99, 132, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top',
+            },
+            tooltip: {
+                mode: 'index',
+                intersect: false,
+                callbacks: {
+                    label: function(context) {
+                        return context.dataset.label + ': R$ ' + context.parsed.y.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                    }
+                }
+            }
+        },
+        interaction: {
+            mode: 'nearest',
+            axis: 'x',
+            intersect: false
+        },
+        scales: {
+            x: {
+                display: true,
+                title: {
+                    display: true,
+                    text: 'Data'
+                }
+            },
+            y: {
+                display: true,
+                title: {
+                    display: true,
+                    text: 'Valor (R$)'
+                },
+                ticks: {
+                    callback: function(value) {
+                        return 'R$ ' + value.toLocaleString('pt-BR');
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Função para reconhecer alertas
+function acknowledgeAlert(alertId) {
+    fetch(`/reports/alerts/${alertId}/acknowledge/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        }
+    })
+    .catch(error => console.error('Erro:', error));
+}
+
+// Event listeners para filtros de período
+document.querySelectorAll('input[name="chartPeriod"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        // Recarregar dashboard com novo período
+        window.location.href = `?period=${this.value}`;
+    });
+});
+
+// Melhorar UX dos filtros de data
+document.addEventListener('DOMContentLoaded', function() {
+    const periodSelect = document.querySelector('select[name="period"]');
+    const startDateInput = document.querySelector('input[name="start_date"]');
+    const endDateInput = document.querySelector('input[name="end_date"]');
+    
+    // Auto-submit quando selecionar período pré-definido
+    if (periodSelect) {
+        periodSelect.addEventListener('change', function() {
+            if (this.value !== 'custom') {
+                // Limpar datas personalizadas
+                startDateInput.value = '';
+                endDateInput.value = '';
+                // Submit automático
+                this.form.submit();
+            }
+        });
+    }
+    
+    // Validação de datas
+    if (startDateInput && endDateInput) {
+        startDateInput.addEventListener('change', function() {
+            // Definir data mínima para data final (não pode ser anterior à data inicial)
+            if (this.value) {
+                endDateInput.min = this.value;
+                // Se data final for anterior à inicial, ajustar
+                if (endDateInput.value && endDateInput.value < this.value) {
+                    endDateInput.value = this.value;
+                }
+            }
+            if (periodSelect) {
+                periodSelect.value = 'custom';
+            }
+        });
+        
+        endDateInput.addEventListener('change', function() {
+            // Definir data máxima para data inicial (não pode ser posterior à data final)
+            if (this.value) {
+                startDateInput.max = this.value;
+                // Se data inicial for posterior à final, ajustar
+                if (startDateInput.value && startDateInput.value > this.value) {
+                    startDateInput.value = this.value;
+                }
+            }
+            if (periodSelect) {
+                periodSelect.value = 'custom';
+            }
+        });
+    }
+    
+    // Shortcuts de teclado para filtros
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.key === 'f') {
+            e.preventDefault();
+            startDateInput.focus();
+        }
+    });
+});
+</script>
+{% endblock %}

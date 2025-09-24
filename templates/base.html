@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>{% block title %}CashFlow Manager{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom CSS -->
+    <link href="{% load static %}{% static 'css/style.css' %}" rel="stylesheet">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    {% if user.is_authenticated %}
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'core:dashboard' %}">
+                <i class="fas fa-chart-line me-2"></i>
+                CashFlow Manager
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:dashboard' %}">
+                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-exchange-alt me-1"></i>Transações
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'transactions:list' %}">Listar Transações</a></li>
+                            <li><a class="dropdown-item" href="{% url 'transactions:create' %}">Nova Transação</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'transactions:category_list' %}">Categorias</a></li>
+                            <li><a class="dropdown-item" href="{% url 'transactions:account_list' %}">Contas</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-chart-bar me-1"></i>Relatórios
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'reports:list' %}">Relatórios</a></li>
+                            <li><a class="dropdown-item" href="{% url 'reports:generate' %}">Gerar Relatório</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'reports:forecast_list' %}">Previsões</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'transactions:goal_list' %}">
+                            <i class="fas fa-bullseye me-1"></i>Metas
+                        </a>
+                    </li>
+                </ul>
+                
+                <ul class="navbar-nav">
+                    <!-- Seletor de Empresa -->
+                    {% if user_companies.count > 1 %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-building me-1"></i>{{ current_company.name|default:"Sem empresa" }}
+                        </a>
+                        <ul class="dropdown-menu">
+                            {% for company in user_companies %}
+                            <li>
+                                <a class="dropdown-item {% if company == current_company %}active{% endif %}" 
+                                   href="{% url 'accounts:switch_company' company.id %}">
+                                    {{ company.name }}
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                    {% endif %}
+                    
+                    <!-- Alertas -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-bell"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="alert-count" style="display: none;">
+                                0
+                            </span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" style="width: 300px;">
+                            <li><h6 class="dropdown-header">Alertas Recentes</h6></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li id="alert-list">
+                                <div class="text-center text-muted p-3">
+                                    <small>Nenhum alerta no momento</small>
+                                </div>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-center" href="{% url 'reports:alert_list' %}">Ver todos os alertas</a></li>
+                        </ul>
+                    </li>
+                    
+                    <!-- Menu do usuário -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i>{{ user.first_name|default:user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><h6 class="dropdown-header">
+                                <i class="fas fa-user me-2"></i>{{ user.get_full_name|default:user.username }}
+                            </h6></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">
+                                <i class="fas fa-user-edit me-2"></i>Meu Perfil
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:profile' %}#password">
+                                <i class="fas fa-key me-2"></i>Alterar Senha
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            {% if is_company_admin %}
+                            <li><a class="dropdown-item" href="{% url 'accounts:company_settings' %}">
+                                <i class="fas fa-cogs me-2"></i>Configurações
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:company_settings' %}#users">
+                                <i class="fas fa-users me-2"></i>Gerenciar Usuários
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            {% endif %}
+                            <li><a class="dropdown-item" href="{% url 'core:dashboard' %}">
+                                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form method="post" action="{% url 'accounts:logout' %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item border-0 bg-transparent text-danger">
+                                        <i class="fas fa-sign-out-alt me-2"></i>Sair
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+    
+    <!-- Main Content -->
+    <main class="{% if user.is_authenticated %}container-fluid mt-4{% else %}d-flex align-items-center min-vh-100{% endif %}">
+        <!-- Messages -->
+        {% if messages %}
+        <div class="container">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Footer -->
+    {% if user.is_authenticated %}
+    <footer class="bg-light border-top mt-5 py-3">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <small class="text-muted">
+                        © 2024 CashFlow Manager. Sistema de Gestão Financeira para Pequenas Empresas.
+                    </small>
+                </div>
+                <div class="col-md-6 text-end">
+                    <small class="text-muted">
+                        {% if current_company %}
+                        Empresa: <strong>{{ current_company.name }}</strong>
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </footer>
+    {% endif %}
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script>
+        // Verificar alertas periodicamente
+        {% if user.is_authenticated %}
+        function checkAlerts() {
+            // Implementar verificação de alertas via AJAX
+            // fetch('/api/alerts/check/')
+            //     .then(response => response.json())
+            //     .then(data => {
+            //         // Atualizar contador de alertas
+            //     });
+        }
+        
+        // Verificar alertas a cada 5 minutos
+        setInterval(checkAlerts, 300000);
+        {% endif %}
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

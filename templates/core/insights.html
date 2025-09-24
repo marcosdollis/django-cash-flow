@@ -1,0 +1,412 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Insights Financeiros - CashFlow Manager{% endblock %}
+
+{% block extra_css %}
+<style>
+.insight-card {
+    border-left: 4px solid #007bff;
+    transition: all 0.3s ease;
+}
+
+.insight-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.health-score {
+    font-size: 3rem;
+    font-weight: bold;
+}
+
+.health-score.excellent { color: #28a745; }
+.health-score.good { color: #20c997; }
+.health-score.average { color: #ffc107; }
+.health-score.poor { color: #fd7e14; }
+.health-score.critical { color: #dc3545; }
+
+.alert-critical { border-left-color: #dc3545; }
+.alert-high { border-left-color: #fd7e14; }
+.alert-medium { border-left-color: #ffc107; }
+.alert-low { border-left-color: #20c997; }
+
+.trend-up { color: #28a745; }
+.trend-down { color: #dc3545; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0">
+                        <i class="fas fa-brain text-primary me-2"></i>
+                        Insights Financeiros
+                    </h1>
+                    <p class="text-muted mb-0">
+                        Análises inteligentes para o período: {{ start_date|date:"d/m/Y" }} - {{ end_date|date:"d/m/Y" }}
+                    </p>
+                </div>
+                <div>
+                    <a href="{% url 'core:dashboard' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left me-1"></i>Voltar ao Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filtros de Data (similares ao dashboard) -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-filter me-2"></i>Filtros de Período para Análise
+                    </h6>
+                </div>
+                <div class="card-body py-3">
+                    <form method="get" action="{% url 'core:insights' %}" class="row g-3">
+                        <!-- Períodos Pré-definidos -->
+                        <div class="col-md-3">
+                            <label class="form-label">Período Rápido:</label>
+                            <select name="period" class="form-select" onchange="this.form.submit()">
+                                <option value="7" {% if current_filters.period == '7' %}selected{% endif %}>Últimos 7 dias</option>
+                                <option value="30" {% if current_filters.period == '30' %}selected{% endif %}>Últimos 30 dias</option>
+                                <option value="60" {% if current_filters.period == '60' %}selected{% endif %}>Últimos 60 dias</option>
+                                <option value="90" {% if current_filters.period == '90' %}selected{% endif %}>Últimos 90 dias</option>
+                                <option value="365" {% if current_filters.period == '365' %}selected{% endif %}>Último ano</option>
+                                <option value="custom" {% if current_filters.start_date %}selected{% endif %}>Personalizado</option>
+                            </select>
+                        </div>
+
+                        <!-- Data Inicial -->
+                        <div class="col-md-3">
+                            <label class="form-label">Data Inicial:</label>
+                            <input type="date" name="start_date" class="form-control" 
+                                   value="{{ current_filters.start_date }}"
+                                   max="{{ end_date|date:'Y-m-d' }}">
+                        </div>
+
+                        <!-- Data Final -->
+                        <div class="col-md-3">
+                            <label class="form-label">Data Final:</label>
+                            <input type="date" name="end_date" class="form-control" 
+                                   value="{{ current_filters.end_date }}"
+                                   max="{{ end_date|date:'Y-m-d' }}">
+                        </div>
+
+                        <!-- Botões -->
+                        <div class="col-md-3 d-flex align-items-end">
+                            <div class="btn-group w-100">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search me-1"></i>Analisar
+                                </button>
+                                <a href="{% url 'core:insights' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-1"></i>Limpar
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+                <div class="badge bg-primary fs-6">
+                    <i class="fas fa-crown me-1"></i>
+                    PREMIUM
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Score de Saúde Financeira -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card insight-card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">
+                        <i class="fas fa-heartbeat text-danger me-2"></i>
+                        Saúde Financeira
+                    </h5>
+                    <div class="health-score {% if insights.health_score >= 80 %}excellent{% elif insights.health_score >= 60 %}good{% elif insights.health_score >= 40 %}average{% elif insights.health_score >= 20 %}poor{% else %}critical{% endif %}">
+                        {{ insights.health_score }}
+                    </div>
+                    <p class="text-muted mb-0">Score de 0 a 100</p>
+                    {% if insights.health_score >= 80 %}
+                        <small class="text-success">Excelente saúde financeira</small>
+                    {% elif insights.health_score >= 60 %}
+                        <small class="text-info">Boa saúde financeira</small>
+                    {% elif insights.health_score >= 40 %}
+                        <small class="text-warning">Saúde financeira regular</small>
+                    {% else %}
+                        <small class="text-danger">Atenção necessária</small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Previsão Financeira -->
+        <div class="col-md-8">
+            <div class="card insight-card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-crystal-ball text-info me-2"></i>
+                        Previsão dos Próximos 30 Dias
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-3">
+                            <h6 class="text-muted">Receitas Previstas</h6>
+                            <h4 class="text-success">R$ {{ insights.forecast.projected_income|floatformat:2 }}</h4>
+                        </div>
+                        <div class="col-3">
+                            <h6 class="text-muted">Despesas Previstas</h6>
+                            <h4 class="text-danger">R$ {{ insights.forecast.projected_expense|floatformat:2 }}</h4>
+                        </div>
+                        <div class="col-3">
+                            <h6 class="text-muted">Resultado Líquido</h6>
+                            <h4 class="{% if insights.forecast.net_flow >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                R$ {{ insights.forecast.net_flow|floatformat:2 }}
+                            </h4>
+                        </div>
+                        <div class="col-3">
+                            <h6 class="text-muted">Saldo Projetado</h6>
+                            <h4 class="{% if insights.forecast.projected_balance >= 0 %}text-primary{% else %}text-danger{% endif %}">
+                                R$ {{ insights.forecast.projected_balance|floatformat:2 }}
+                            </h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alertas -->
+    {% if insights.spending_spikes or insights.balance_risks %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card insight-card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                        Alertas Inteligentes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Picos de Gastos -->
+                    {% for alert in insights.spending_spikes %}
+                    <div class="alert alert-{{ alert.severity }} alert-dismissible fade show" role="alert">
+                        <i class="fas fa-chart-line me-2"></i>
+                        <strong>{{ alert.title }}</strong><br>
+                        {{ alert.message }}<br>
+                        <small class="text-muted">💡 {{ alert.recommendation }}</small>
+                    </div>
+                    {% endfor %}
+                    
+                    <!-- Riscos de Saldo -->
+                    {% for alert in insights.balance_risks %}
+                    <div class="alert alert-{{ alert.severity }} alert-dismissible fade show" role="alert">
+                        <i class="fas fa-money-bill-wave me-2"></i>
+                        <strong>{{ alert.title }}</strong><br>
+                        {{ alert.message }}<br>
+                        <small class="text-muted">💡 {{ alert.recommendation }}</small>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Tendências por Categoria -->
+    {% if insights.category_trends %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card insight-card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-trending-up text-success me-2"></i>
+                        Tendências por Categoria
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for trend in insights.category_trends %}
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-0">{{ trend.category }}</h6>
+                                    <small class="text-muted">{{ trend.message }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="{% if trend.change_percent > 0 %}trend-up{% else %}trend-down{% endif %}">
+                                        <i class="fas fa-arrow-{% if trend.change_percent > 0 %}up{% else %}down{% endif %} me-1"></i>
+                                        {{ trend.change_percent|floatformat:1 }}%
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Top Categorias de Gasto -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card insight-card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-pie text-primary me-2"></i>
+                        Maiores Gastos por Categoria
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for category in top_expense_categories %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-circle me-2" style="width: 12px; height: 12px; background-color: {{ category.color }};"></div>
+                            <span>{{ category.name }}</span>
+                        </div>
+                        <strong>R$ {{ category.total_spent|floatformat:2 }}</strong>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Padrões por Dia da Semana -->
+        <div class="col-md-6">
+            <div class="card insight-card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-calendar-week text-info me-2"></i>
+                        Gastos por Dia da Semana
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="weekdayChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dicas Premium -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card insight-card" style="border-left-color: #6f42c1;">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-lightbulb text-warning me-2"></i>
+                        Dicas Inteligentes Premium
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6><i class="fas fa-robot text-primary me-2"></i>IA Financeira</h6>
+                            <p class="text-muted small">Análise automática de padrões e detecção de anomalias em tempo real.</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h6><i class="fas fa-shield-alt text-success me-2"></i>Proteção de Fluxo</h6>
+                            <p class="text-muted small">Alertas preventivos para evitar problemas de caixa antes que aconteçam.</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h6><i class="fas fa-chart-line text-info me-2"></i>Projeções Avançadas</h6>
+                            <p class="text-muted small">Previsões baseadas em machine learning para planejamento estratégico.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Gráfico de gastos por dia da semana
+const weekdayCtx = document.getElementById('weekdayChart').getContext('2d');
+const weekdayData = {{ weekday_patterns|safe }};
+const weekdayLabels = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+
+new Chart(weekdayCtx, {
+    type: 'bar',
+    data: {
+        labels: weekdayLabels,
+        datasets: [{
+            label: 'Gastos (R$)',
+            data: Object.values(weekdayData),
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return 'R$ ' + value.toLocaleString('pt-BR');
+                    }
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                display: false
+            }
+        }
+    }
+});
+
+// JavaScript para controle dos filtros de data
+document.addEventListener('DOMContentLoaded', function() {
+    const periodSelect = document.querySelector('select[name="period"]');
+    const startDateInput = document.querySelector('input[name="start_date"]');
+    const endDateInput = document.querySelector('input[name="end_date"]');
+    
+    // Função para limpar datas customizadas quando selecionar período pré-definido
+    periodSelect.addEventListener('change', function() {
+        if (this.value !== 'custom') {
+            startDateInput.value = '';
+            endDateInput.value = '';
+        }
+    });
+    
+    // Validação das datas customizadas
+    startDateInput.addEventListener('change', function() {
+        if (this.value && endDateInput.value && this.value > endDateInput.value) {
+            alert('A data inicial não pode ser posterior à data final');
+            this.value = '';
+        }
+        if (this.value) {
+            periodSelect.value = 'custom';
+        }
+    });
+    
+    endDateInput.addEventListener('change', function() {
+        if (this.value && startDateInput.value && this.value < startDateInput.value) {
+            alert('A data final não pode ser anterior à data inicial');
+            this.value = '';
+        }
+        if (this.value) {
+            periodSelect.value = 'custom';
+        }
+    });
+});
+</script>
+{% endblock %}

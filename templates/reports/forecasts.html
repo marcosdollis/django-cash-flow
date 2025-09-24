@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}Previsões - CashFlow Manager{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>
+                <i class="fas fa-crystal-ball me-2"></i>Previsões Financeiras
+            </h2>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'reports:forecast_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>Nova Previsão
+            </a>
+        </div>
+    </div>
+
+    <!-- Previsões Automáticas -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>Previsão de Fluxo de Caixa
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Próximos 30 dias</span>
+                        <span class="badge bg-success">+R$ 2.850,00</span>
+                    </div>
+                    <div class="progress mb-2">
+                        <div class="progress-bar bg-success" style="width: 75%"></div>
+                    </div>
+                    <small class="text-muted">Baseado nos últimos 3 meses</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Alertas de Risco
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Risco de saldo baixo</span>
+                        <span class="badge bg-warning">Médio</span>
+                    </div>
+                    <div class="progress mb-2">
+                        <div class="progress-bar bg-warning" style="width: 45%"></div>
+                    </div>
+                    <small class="text-muted">Conta Caixa em 15 dias</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tendências -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-trending-up me-2"></i>Tendências de Gastos
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4 text-center">
+                    <div class="border p-3 rounded">
+                        <i class="fas fa-shopping-cart fa-2x text-primary mb-2"></i>
+                        <h6>Despesas Operacionais</h6>
+                        <div class="d-flex justify-content-center align-items-center">
+                            <span class="badge bg-danger me-2">↑ 15%</span>
+                            <small class="text-muted">vs mês anterior</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="border p-3 rounded">
+                        <i class="fas fa-utensils fa-2x text-success mb-2"></i>
+                        <h6>Alimentação</h6>
+                        <div class="d-flex justify-content-center align-items-center">
+                            <span class="badge bg-success me-2">↓ 8%</span>
+                            <small class="text-muted">vs mês anterior</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="border p-3 rounded">
+                        <i class="fas fa-car fa-2x text-warning mb-2"></i>
+                        <h6>Transporte</h6>
+                        <div class="d-flex justify-content-center align-items-center">
+                            <span class="badge bg-secondary me-2">→ 2%</span>
+                            <small class="text-muted">vs mês anterior</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Previsões Personalizadas -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-user-cog me-2"></i>Previsões Personalizadas
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="text-center py-4">
+                <i class="fas fa-crystal-ball fa-3x text-muted mb-3"></i>
+                <h6 class="text-muted">Nenhuma previsão personalizada</h6>
+                <p class="text-muted">Crie previsões customizadas baseadas em seus padrões específicos.</p>
+                <a href="{% url 'reports:forecast_create' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-plus me-1"></i>Criar Primeira Previsão
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

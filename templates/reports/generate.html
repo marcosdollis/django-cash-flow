@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block title %}Gerar Relatório - CashFlow Manager{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <h4 class="mb-0">
+                <i class="fas fa-chart-bar me-2"></i>Gerar Relatório
+            </h4>
+        </div>
+        <div class="card-body">
+            <form method="get" action="{% url 'core:export_financial_report' %}">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="start_date" class="form-label">Data Inicial</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date" 
+                                   value="{{ request.GET.start_date|default:'' }}" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="end_date" class="form-label">Data Final</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date" 
+                                   value="{{ request.GET.end_date|default:'' }}" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="report_type" class="form-label">Tipo de Relatório</label>
+                            <select class="form-select" id="report_type" name="type">
+                                <option value="financial">Relatório Financeiro Completo</option>
+                                <option value="cash_flow">Fluxo de Caixa</option>
+                                <option value="categories">Análise por Categorias</option>
+                                <option value="accounts">Análise por Contas</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="format" class="form-label">Formato</label>
+                            <select class="form-select" id="format" name="format">
+                                <option value="pdf">PDF</option>
+                                <option value="excel">Excel (XLSX)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="title" class="form-label">Título do Relatório (Opcional)</label>
+                    <input type="text" class="form-control" id="title" name="title" 
+                           placeholder="Ex: Relatório Mensal de Janeiro 2024">
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'reports:list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Voltar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-file-download me-1"></i>Gerar e Baixar
+                    </button>
+                </div>
+            </form>
+            
+            <!-- Preview Section -->
+            <hr class="my-4">
+            <h6>Visualização Rápida</h6>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <i class="fas fa-file-pdf fa-2x text-danger mb-2"></i>
+                            <h6>PDF</h6>
+                            <small class="text-muted">Relatório formatado para impressão</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <i class="fas fa-file-excel fa-2x text-success mb-2"></i>
+                            <h6>Excel</h6>
+                            <small class="text-muted">Planilha para análise de dados</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <i class="fas fa-chart-line fa-2x text-primary mb-2"></i>
+                            <h6>Gráficos</h6>
+                            <small class="text-muted">Visualizações interativas</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
