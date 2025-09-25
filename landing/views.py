@@ -15,10 +15,10 @@ def landing_page(request):
     
     context = {
         'page_title': 'CashFlow Manager - Gestão Financeira Inteligente',
-        'meta_description': 'Sistema completo de gestão financeira com IA, relatórios profissionais e análises avançadas. Por apenas R$ 49,90/mês com ROI de até 19.100%.',
+        'meta_description': 'Sistema completo de gestão financeira com IA, relatórios profissionais e análises avançadas. Por apenas R$ 59,90/mês com ROI de até 19.100%.',
     }
     
-    return render(request, 'landing/landing_page_modern.html', context)
+    return render(request, 'landing/landing_new.html', context)
 
 
 @require_http_methods(["POST"])

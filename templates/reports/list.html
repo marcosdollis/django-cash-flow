@@ -9,6 +9,7 @@
             <h2>
                 <i class="fas fa-chart-bar me-2"></i>Relatórios
             </h2>
+            <p class="text-muted">Acesse e gere relatórios financeiros detalhados</p>
         </div>
         <div class="col-auto">
             <a href="{% url 'reports:generate' %}" class="btn btn-primary">
@@ -17,16 +18,16 @@
         </div>
     </div>
 
-    <!-- Relatórios Rápidos -->
+    <!-- Links Rápidos -->
     <div class="row mb-4">
         <div class="col-md-3 mb-3">
             <div class="card h-100 border-primary">
                 <div class="card-body text-center">
-                    <i class="fas fa-chart-line fa-3x text-primary mb-3"></i>
-                    <h5 class="card-title">Fluxo de Caixa</h5>
-                    <p class="card-text">Visualize entradas e saídas por período</p>
-                    <a href="{% url 'reports:generate' %}?type=cash_flow" class="btn btn-primary">
-                        <i class="fas fa-eye me-1"></i>Visualizar
+                    <i class="fas fa-plus-circle fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Gerar Novo</h5>
+                    <p class="card-text">Configure e exporte relatórios personalizados</p>
+                    <a href="{% url 'reports:generate' %}" class="btn btn-primary">
+                        <i class="fas fa-cog me-1"></i>Configurar
                     </a>
                 </div>
             </div>
@@ -35,10 +36,10 @@
         <div class="col-md-3 mb-3">
             <div class="card h-100 border-success">
                 <div class="card-body text-center">
-                    <i class="fas fa-chart-pie fa-3x text-success mb-3"></i>
-                    <h5 class="card-title">Por Categoria</h5>
-                    <p class="card-text">Análise de gastos por categoria</p>
-                    <a href="{% url 'reports:generate' %}?type=categories" class="btn btn-success">
+                    <i class="fas fa-chart-line fa-3x text-success mb-3"></i>
+                    <h5 class="card-title">Relatório Financeiro</h5>
+                    <p class="card-text">Visualizar receitas e despesas detalhadas</p>
+                    <a href="{% url 'reports:financial' %}" class="btn btn-success">
                         <i class="fas fa-eye me-1"></i>Visualizar
                     </a>
                 </div>
@@ -48,6 +49,74 @@
         <div class="col-md-3 mb-3">
             <div class="card h-100 border-info">
                 <div class="card-body text-center">
+                    <i class="fas fa-money-bill-wave fa-3x text-info mb-3"></i>
+                    <h5 class="card-title">Fluxo de Caixa</h5>
+                    <p class="card-text">Acompanhar evolução do fluxo mensal</p>
+                    <a href="{% url 'reports:cash_flow' %}" class="btn btn-info">
+                        <i class="fas fa-chart-area me-1"></i>Ver Fluxo
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card h-100 border-warning">
+                <div class="card-body text-center">
+                    <i class="fas fa-file-invoice fa-3x text-warning mb-3"></i>
+                    <h5 class="card-title">DASN-SIMEI</h5>
+                    <p class="card-text">Relatório específico para MEI</p>
+                    <a href="{% url 'reports:dasn_simei' %}" class="btn btn-warning">
+                        <i class="fas fa-file-pdf me-1"></i>Gerar PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informações sobre Exportação -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-download me-2"></i>Formatos de Exportação Disponíveis
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="text-center">
+                        <i class="fas fa-file-pdf fa-3x text-danger mb-2"></i>
+                        <h6>PDF Profissional</h6>
+                        <p class="small text-muted">
+                            Relatórios com visual corporativo, gráficos e tabelas formatadas. 
+                            Ideal para apresentações e arquivamento.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center">
+                        <i class="fas fa-file-excel fa-3x text-success mb-2"></i>
+                        <h6>Planilhas Excel</h6>
+                        <p class="small text-muted">
+                            Dados editáveis para análises personalizadas. 
+                            Permite criar seus próprios gráficos e relatórios.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center">
+                        <i class="fas fa-globe fa-3x text-primary mb-2"></i>
+                        <h6>Visualização Online</h6>
+                        <p class="small text-muted">
+                            Gráficos interativos no navegador com filtros dinâmicos. 
+                            Perfeito para análises rápidas.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
                     <i class="fas fa-university fa-3x text-info mb-3"></i>
                     <h5 class="card-title">Por Conta</h5>
                     <p class="card-text">Saldos e movimentações por conta</p>

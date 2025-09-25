@@ -1,0 +1,251 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Relatório Financeiro{% endblock %}
+
+{% block extra_css %}
+<style>
+.card-metric {
+    text-align: center;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.card-metric.income {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+.card-metric.expense {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+}
+
+.card-metric.net {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    color: white;
+}
+
+.card-metric.net.negative {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.metric-value {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.metric-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.transaction-item {
+    border-left: 4px solid #e5e7eb;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 0 8px 8px 0;
+    background: white;
+}
+
+.transaction-item.income {
+    border-left-color: #10b981;
+    background: linear-gradient(90deg, #f0fdf4 0%, #ffffff 100%);
+}
+
+.transaction-item.expense {
+    border-left-color: #ef4444;
+    background: linear-gradient(90deg, #fef2f2 0%, #ffffff 100%);
+}
+
+.period-selector {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-1">Relatório Financeiro</h1>
+                    <p class="text-muted mb-0">
+                        Período: {{ start_date|date:"d/m/Y" }} até {{ end_date|date:"d/m/Y" }}
+                    </p>
+                </div>
+                <a href="{% url 'reports:overview' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar
+                </a>
+            </div>
+
+            <!-- Filtro de Período -->
+            <div class="period-selector mb-4">
+                <form method="get" class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label for="start_date" class="form-label">Data Inicial</label>
+                        <input type="date" class="form-control" id="start_date" name="start_date" 
+                               value="{{ start_date|date:'Y-m-d' }}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="end_date" class="form-label">Data Final</label>
+                        <input type="date" class="form-control" id="end_date" name="end_date" 
+                               value="{{ end_date|date:'Y-m-d' }}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search me-2"></i>Atualizar Relatório
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Métricas Principais -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card-metric income">
+                        <div class="metric-value">R$ {{ income|floatformat:2 }}</div>
+                        <div class="metric-label">
+                            <i class="fas fa-arrow-up me-1"></i>Receitas
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card-metric expense">
+                        <div class="metric-value">R$ {{ expense|floatformat:2 }}</div>
+                        <div class="metric-label">
+                            <i class="fas fa-arrow-down me-1"></i>Despesas
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card-metric net {% if net < 0 %}negative{% endif %}">
+                        <div class="metric-value">R$ {{ net|floatformat:2 }}</div>
+                        <div class="metric-label">
+                            {% if net >= 0 %}
+                                <i class="fas fa-plus me-1"></i>Resultado Líquido
+                            {% else %}
+                                <i class="fas fa-minus me-1"></i>Déficit
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Análise por Categoria -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-chart-pie me-2"></i>
+                                Por Categoria
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if category_data %}
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Categoria</th>
+                                                <th class="text-end">Receitas</th>
+                                                <th class="text-end">Despesas</th>
+                                                <th class="text-end">Saldo</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for category, data in category_data.items %}
+                                                <tr>
+                                                    <td>{{ category }}</td>
+                                                    <td class="text-end text-success">
+                                                        {% if data.income > 0 %}
+                                                            R$ {{ data.income|floatformat:2 }}
+                                                        {% else %}
+                                                            -
+                                                        {% endif %}
+                                                    </td>
+                                                    <td class="text-end text-danger">
+                                                        {% if data.expense > 0 %}
+                                                            R$ {{ data.expense|floatformat:2 }}
+                                                        {% else %}
+                                                            -
+                                                        {% endif %}
+                                                    </td>
+                                                    <td class="text-end">
+                                                        {% with income_val=data.income expense_val=data.expense %}
+                                                            {% if income_val >= expense_val %}
+                                                                <span class="text-success">
+                                                                    R$ {{ income_val|floatformat:2 }}
+                                                                </span>
+                                                            {% else %}
+                                                                <span class="text-danger">
+                                                                    -R$ {{ expense_val|floatformat:2 }}
+                                                                </span>
+                                                            {% endif %}
+                                                        {% endwith %}
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <p class="text-muted text-center">
+                                    Nenhuma transação encontrada no período selecionado.
+                                </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transações Recentes -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-list me-2"></i>
+                                Transações Recentes (50 últimas)
+                            </h5>
+                        </div>
+                        <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+                            {% if transactions %}
+                                {% for transaction in transactions %}
+                                    <div class="transaction-item {{ transaction.transaction_type }}">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-1">{{ transaction.description }}</h6>
+                                                <small class="text-muted">
+                                                    {% if transaction.category %}
+                                                        <i class="fas fa-tag me-1"></i>{{ transaction.category.name }}
+                                                    {% endif %}
+                                                    <i class="fas fa-calendar ms-2 me-1"></i>{{ transaction.transaction_date|date:"d/m/Y" }}
+                                                </small>
+                                            </div>
+                                            <div class="text-end">
+                                                <strong class="{% if transaction.transaction_type == 'income' %}text-success{% else %}text-danger{% endif %}">
+                                                    {% if transaction.transaction_type == 'income' %}+{% else %}-{% endif %}R$ {{ transaction.amount|floatformat:2 }}
+                                                </strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted text-center">
+                                    Nenhuma transação encontrada no período.
+                                </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,331 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}DASN-SIMEI - Declaração Anual MEI{% endblock %}
+
+{% block extra_css %}
+<style>
+.info-card {
+    border-left: 4px solid #3b82f6;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+.warning-card {
+    border-left: 4px solid #f59e0b;
+    background: linear-gradient(135deg, #fef3c7 0%, #f3f4f6 100%);
+}
+
+.success-card {
+    border-left: 4px solid #10b981;
+    background: linear-gradient(135deg, #d1fae5 0%, #f3f4f6 100%);
+}
+
+.year-selector {
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.year-selector:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.generate-btn {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    border: none;
+    border-radius: 10px;
+    padding: 12px 24px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(59, 130, 246, 0.25);
+}
+
+.generate-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(59, 130, 246, 0.3);
+}
+
+.feature-list li {
+    padding: 8px 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.feature-list li:last-child {
+    border-bottom: none;
+}
+
+.instructions-step {
+    background: white;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s ease;
+}
+
+.instructions-step:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-color: #3b82f6;
+}
+
+.step-number {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 14px;
+    margin-right: 12px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-1">DASN-SIMEI</h1>
+                    <p class="text-muted mb-0">Declaração Anual do Simples Nacional - MEI</p>
+                </div>
+                <a href="{% url 'reports:overview' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar
+                </a>
+            </div>
+
+            <!-- Informações importantes -->
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <div class="info-card card p-4 mb-4">
+                        <h5 class="text-primary mb-3">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Sobre a DASN-SIMEI
+                        </h5>
+                        <p class="mb-3">
+                            A Declaração Anual do Simples Nacional (DASN-SIMEI) é obrigatória para todos os 
+                            Microempreendedores Individuais (MEI), mesmo aqueles que não tiveram receita no ano.
+                        </p>
+                        <ul class="feature-list mb-0">
+                            <li><strong>Prazo:</strong> Até 31 de maio do ano seguinte</li>
+                            <li><strong>Multa por atraso:</strong> R$ 50,00 por mês ou fração</li>
+                            <li><strong>Limite MEI 2024:</strong> R$ 81.000,00 por ano</li>
+                            <li><strong>Gratuito:</strong> Não há custo para fazer a declaração</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    {% if not transactions_exist %}
+                        <div class="warning-card card p-4">
+                            <h6 class="text-warning mb-2">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Atenção
+                            </h6>
+                            <p class="mb-0 small">
+                                Não foram encontradas transações para o ano selecionado. 
+                                Mesmo assim, você pode gerar o relatório base para a declaração.
+                            </p>
+                        </div>
+                    {% else %}
+                        <div class="success-card card p-4">
+                            <h6 class="text-success mb-2">
+                                <i class="fas fa-check-circle me-2"></i>
+                                Dados encontrados
+                            </h6>
+                            <p class="mb-0 small">
+                                Transações identificadas para o ano selecionado. 
+                                O relatório será gerado com base nos seus dados reais.
+                            </p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Formulário de geração -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Gerar Relatório DASN-SIMEI</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" class="row g-3">
+                        {% csrf_token %}
+                        <div class="col-md-4">
+                            <label for="year" class="form-label">Ano da Declaração</label>
+                            <select name="year" id="year" class="form-select year-selector" required>
+                                {% for year in available_years %}
+                                    <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>
+                                        {{ year }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">
+                                Selecione o ano-calendário da declaração
+                            </div>
+                        </div>
+                        <div class="col-md-8 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary generate-btn">
+                                <i class="fas fa-file-pdf me-2"></i>
+                                Gerar Relatório PDF
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Instruções detalhadas -->
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-list-ol me-2"></i>
+                                Como fazer a declaração
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="instructions-step">
+                                <div class="d-flex align-items-start">
+                                    <span class="step-number">1</span>
+                                    <div>
+                                        <strong>Acesse o Portal</strong>
+                                        <p class="mb-0 small text-muted">
+                                            Vá para <a href="https://www.gov.br/empreendedor" target="_blank">gov.br/empreendedor</a>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="instructions-step">
+                                <div class="d-flex align-items-start">
+                                    <span class="step-number">2</span>
+                                    <div>
+                                        <strong>Entre na área MEI</strong>
+                                        <p class="mb-0 small text-muted">
+                                            Clique em "Já sou MEI" → "Declaração Anual"
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="instructions-step">
+                                <div class="d-flex align-items-start">
+                                    <span class="step-number">3</span>
+                                    <div>
+                                        <strong>Faça o login</strong>
+                                        <p class="mb-0 small text-muted">
+                                            Use seu CNPJ e código de acesso
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="instructions-step">
+                                <div class="d-flex align-items-start">
+                                    <span class="step-number">4</span>
+                                    <div>
+                                        <strong>Preencha os dados</strong>
+                                        <p class="mb-0 small text-muted">
+                                            Use as informações do relatório gerado aqui
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="instructions-step">
+                                <div class="d-flex align-items-start">
+                                    <span class="step-number">5</span>
+                                    <div>
+                                        <strong>Transmita</strong>
+                                        <p class="mb-0 small text-muted">
+                                            Confira e envie sua declaração
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-lightbulb me-2"></i>
+                                Dicas importantes
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-info">
+                                <h6 class="alert-heading">
+                                    <i class="fas fa-calendar-alt me-2"></i>
+                                    Prazo 2024
+                                </h6>
+                                <p class="mb-0">
+                                    A DASN-SIMEI referente ao ano de 2023 deve ser entregue até 
+                                    <strong>31 de maio de 2024</strong>.
+                                </p>
+                            </div>
+
+                            <div class="alert alert-warning">
+                                <h6 class="alert-heading">
+                                    <i class="fas fa-exclamation-circle me-2"></i>
+                                    Sem receita? Declare mesmo assim!
+                                </h6>
+                                <p class="mb-0">
+                                    Mesmo que você não tenha tido receita no ano, a declaração 
+                                    continua sendo obrigatória.
+                                </p>
+                            </div>
+
+                            <div class="alert alert-success">
+                                <h6 class="alert-heading">
+                                    <i class="fas fa-shield-alt me-2"></i>
+                                    Mantenha seus comprovantes
+                                </h6>
+                                <p class="mb-0">
+                                    Guarde todas as notas fiscais e comprovantes por pelo menos 
+                                    5 anos para eventuais consultas.
+                                </p>
+                            </div>
+
+                            <div class="mt-3">
+                                <h6 class="mb-2">Links úteis:</h6>
+                                <ul class="list-unstyled">
+                                    <li class="mb-1">
+                                        <a href="https://www.gov.br/empreendedor/pt-br" target="_blank" class="text-decoration-none">
+                                            <i class="fas fa-external-link-alt me-2"></i>
+                                            Portal do Empreendedor
+                                        </a>
+                                    </li>
+                                    <li class="mb-1">
+                                        <a href="https://www8.receita.fazenda.gov.br/SimplesNacional/" target="_blank" class="text-decoration-none">
+                                            <i class="fas fa-external-link-alt me-2"></i>
+                                            Portal do Simples Nacional
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Atualizar página quando trocar o ano
+document.getElementById('year').addEventListener('change', function() {
+    const selectedYear = this.value;
+    const currentUrl = new URL(window.location);
+    currentUrl.searchParams.set('year', selectedYear);
+    window.location.href = currentUrl.toString();
+});
+</script>
+{% endblock %}

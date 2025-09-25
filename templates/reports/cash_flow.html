@@ -1,0 +1,325 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Fluxo de Caixa{% endblock %}
+
+{% block extra_css %}
+<style>
+.chart-container {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.summary-card {
+    text-align: center;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    color: white;
+}
+
+.summary-card.positive {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.summary-card.negative {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.summary-card.neutral {
+    background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+}
+
+.summary-value {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.summary-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.account-balance {
+    background: white;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-left: 4px solid #3b82f6;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-1">Fluxo de Caixa</h1>
+                    <p class="text-muted mb-0">Análise da movimentação financeira dos últimos 12 meses</p>
+                </div>
+                <a href="{% url 'reports:overview' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar
+                </a>
+            </div>
+
+            <!-- Gráfico Principal -->
+            <div class="chart-container">
+                <canvas id="cashFlowChart" height="400"></canvas>
+            </div>
+
+            <div class="row">
+                <!-- Resumo dos Últimos 12 Meses -->
+                <div class="col-md-4">
+                    <div class="summary-card positive" id="totalIncomeCard">
+                        <div class="summary-value" id="totalIncomeValue">R$ 0,00</div>
+                        <div class="summary-label">
+                            <i class="fas fa-arrow-up me-1"></i>Total de Receitas (12m)
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="summary-card negative" id="totalExpenseCard">
+                        <div class="summary-value" id="totalExpenseValue">R$ 0,00</div>
+                        <div class="summary-label">
+                            <i class="fas fa-arrow-down me-1"></i>Total de Despesas (12m)
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="summary-card neutral" id="netFlowCard">
+                        <div class="summary-value" id="netFlowValue">R$ 0,00</div>
+                        <div class="summary-label">
+                            <i class="fas fa-chart-line me-1"></i>Fluxo Líquido (12m)
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Saldo das Contas -->
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-wallet me-2"></i>
+                                Saldo Atual das Contas
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if accounts %}
+                                {% for account in accounts %}
+                                    <div class="account-balance">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h6 class="mb-1">{{ account.name }}</h6>
+                                                <small class="text-muted">{{ account.get_account_type_display }}</small>
+                                            </div>
+                                            <div class="text-end">
+                                                <strong class="{% if account.current_balance >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                                    R$ {{ account.current_balance|floatformat:2 }}
+                                                </strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted text-center">
+                                    Nenhuma conta encontrada.
+                                </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dicas e Análises -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-lightbulb me-2"></i>
+                                Análise do Fluxo
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="analysisContent">
+                                <div class="alert alert-info">
+                                    <h6 class="alert-heading">
+                                        <i class="fas fa-chart-line me-1"></i>
+                                        Carregando análise...
+                                    </h6>
+                                    <p class="mb-0">
+                                        Os dados estão sendo processados para gerar insights sobre seu fluxo de caixa.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Dados do fluxo de caixa
+    const monthlyData = {{ monthly_data|safe }};
+    
+    // Configuração do gráfico
+    const ctx = document.getElementById('cashFlowChart').getContext('2d');
+    const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: monthlyData.map(item => item.month),
+            datasets: [{
+                label: 'Receitas',
+                data: monthlyData.map(item => item.income),
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4
+            }, {
+                label: 'Despesas',
+                data: monthlyData.map(item => item.expense),
+                borderColor: '#ef4444',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4
+            }, {
+                label: 'Fluxo Líquido',
+                data: monthlyData.map(item => item.net),
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                borderWidth: 3,
+                fill: false,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Evolução do Fluxo de Caixa (Últimos 12 Meses)',
+                    font: {
+                        size: 16,
+                        weight: 'bold'
+                    }
+                },
+                legend: {
+                    display: true,
+                    position: 'top'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return 'R$ ' + value.toLocaleString('pt-BR', {
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 0
+                            });
+                        }
+                    }
+                }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            }
+        }
+    });
+
+    // Calcular totais
+    let totalIncome = 0;
+    let totalExpense = 0;
+    
+    monthlyData.forEach(item => {
+        totalIncome += item.income;
+        totalExpense += item.expense;
+    });
+    
+    const netFlow = totalIncome - totalExpense;
+    
+    // Atualizar cards de resumo
+    document.getElementById('totalIncomeValue').textContent = 
+        'R$ ' + totalIncome.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    
+    document.getElementById('totalExpenseValue').textContent = 
+        'R$ ' + totalExpense.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    
+    document.getElementById('netFlowValue').textContent = 
+        'R$ ' + netFlow.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    
+    // Atualizar classe do card de fluxo líquido
+    const netFlowCard = document.getElementById('netFlowCard');
+    netFlowCard.classList.remove('neutral', 'positive', 'negative');
+    if (netFlow > 0) {
+        netFlowCard.classList.add('positive');
+    } else if (netFlow < 0) {
+        netFlowCard.classList.add('negative');
+    } else {
+        netFlowCard.classList.add('neutral');
+    }
+    
+    // Gerar análise
+    generateAnalysis(monthlyData, totalIncome, totalExpense, netFlow);
+});
+
+function generateAnalysis(data, totalIncome, totalExpense, netFlow) {
+    let analysisHtml = '';
+    
+    // Análise de tendência
+    const recentMonths = data.slice(-3);
+    const avgRecentIncome = recentMonths.reduce((sum, item) => sum + item.income, 0) / 3;
+    const avgRecentExpense = recentMonths.reduce((sum, item) => sum + item.expense, 0) / 3;
+    
+    if (netFlow > 0) {
+        analysisHtml += `
+            <div class="alert alert-success">
+                <h6 class="alert-heading"><i class="fas fa-thumbs-up me-1"></i>Fluxo Positivo</h6>
+                <p class="mb-0">Suas receitas superam as despesas em <strong>R$ ${netFlow.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong> nos últimos 12 meses. Continue assim!</p>
+            </div>
+        `;
+    } else if (netFlow < 0) {
+        analysisHtml += `
+            <div class="alert alert-warning">
+                <h6 class="alert-heading"><i class="fas fa-exclamation-triangle me-1"></i>Atenção ao Fluxo</h6>
+                <p class="mb-0">Suas despesas superaram as receitas em <strong>R$ ${Math.abs(netFlow).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong>. Considere revisar seus gastos.</p>
+            </div>
+        `;
+    }
+    
+    // Análise da média mensal
+    const monthlyAvgIncome = totalIncome / 12;
+    const monthlyAvgExpense = totalExpense / 12;
+    
+    analysisHtml += `
+        <div class="row text-center">
+            <div class="col-6">
+                <div class="border-end">
+                    <h6 class="text-success">Receita Média/Mês</h6>
+                    <strong>R$ ${monthlyAvgIncome.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong>
+                </div>
+            </div>
+            <div class="col-6">
+                <h6 class="text-danger">Despesa Média/Mês</h6>
+                <strong>R$ ${monthlyAvgExpense.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('analysisContent').innerHTML = analysisHtml;
+}
+</script>
+{% endblock %}

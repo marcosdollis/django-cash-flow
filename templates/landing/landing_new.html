@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title|default:'CashFlow Manager - Gestão Financeira Inteligente' }}</title>
+    <meta name="description" content="{{ meta_description|default:'Sistema completo de gestão financeira com IA para MEIs' }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #f1f5f9;
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        }
+        
+        * { box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #ffffff;
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+        
+        /* Hero Section */
+        .hero {
+            background: var(--gradient);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><defs><radialGradient id="a"><stop offset="0%" stop-color="%23ffffff" stop-opacity="0.1"/><stop offset="100%" stop-color="%23ffffff" stop-opacity="0"/></radialGradient></defs><circle cx="200" cy="200" r="180" fill="url(%23a)"/><circle cx="800" cy="300" r="120" fill="url(%23a)"/><circle cx="400" cy="700" r="150" fill="url(%23a)"/></svg>');
+            opacity: 0.1;
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            color: white;
+        }
+        
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+        }
+        
+        .hero .lead {
+            font-size: 1.25rem;
+            font-weight: 400;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+        
+        .price-container {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            margin: 2rem 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .price-tag {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 0.5rem;
+        }
+        
+        .price-subtitle {
+            opacity: 0.8;
+            font-size: 1.1rem;
+        }
+        
+        /* Buttons */
+        .btn-hero {
+            background: white;
+            color: var(--primary);
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            border: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-hero:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            color: var(--primary-dark);
+        }
+        
+        .btn-secondary-hero {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-secondary-hero:hover {
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        /* Sections */
+        .section {
+            padding: 5rem 0;
+        }
+        
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 3rem;
+            color: var(--text-dark);
+        }
+        
+        /* Feature Cards */
+        .feature-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2.5rem;
+            text-align: center;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.05);
+            border: 1px solid #f1f5f9;
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        }
+        
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 2rem;
+            color: white;
+        }
+        
+        .feature-card h5 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-dark);
+        }
+        
+        .feature-card p {
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+        
+        /* Stats Section */
+        .stats-section {
+            background: var(--secondary);
+            padding: 4rem 0;
+        }
+        
+        .stat-card {
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: block;
+        }
+        
+        .stat-label {
+            color: var(--text-light);
+            font-weight: 500;
+            margin-top: 0.5rem;
+        }
+        
+        /* Footer */
+        .footer {
+            background: var(--text-dark);
+            color: white;
+            padding: 3rem 0;
+            text-align: center;
+        }
+
+        /* Comparison Table */
+        .comparison-section {
+            background: white;
+            padding: 5rem 0;
+        }
+        
+        .comparison-table {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.05);
+            border: none;
+        }
+        
+        .comparison-table thead th {
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+            padding: 1.5rem;
+            border: none;
+        }
+        
+        .comparison-table td {
+            padding: 1.5rem;
+            vertical-align: middle;
+            border: none;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        
+        .comparison-table .highlight-row {
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+        }
+        
+        /* ROI Section */
+        .roi-section {
+            background: var(--gradient);
+            color: white;
+            padding: 5rem 0;
+            position: relative;
+        }
+        
+        .roi-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 3rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .roi-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .roi-item:last-child {
+            border-bottom: none;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+        
+        /* CTA Section */
+        .cta-section {
+            background: white;
+            padding: 5rem 0;
+            text-align: center;
+        }
+        
+        .cta-content {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-fade-in {
+            animation: fadeInUp 0.8s ease-out;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.5rem; }
+            .price-tag { font-size: 2.5rem; }
+            .section-title { font-size: 2rem; }
+            .feature-card { padding: 2rem 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6 hero-content">
+                    <h1 class="animate-fade-in">Gestão Financeira para <br><span style="color: #fbbf24;">MEIs</span> com <span style="color: #fbbf24;">Inteligência Artificial</span></h1>
+                    <p class="lead animate-fade-in">O sistema completo que revoluciona a forma como <strong>Microempreendedores Individuais</strong> gerenciam suas finanças. Automatização, insights inteligentes e decisões baseadas em dados, feito especialmente para MEIs.</p>
+                    
+                    <div class="price-container animate-fade-in">
+                        <div class="price-tag">R$ 59,90<span style="font-size: 1.2rem; opacity: 0.8;">/mês</span></div>
+                        <div class="price-subtitle">Preço especial para MEIs - 96% mais barato que concorrentes</div>
+                    </div>
+                    
+                    <div class="animate-fade-in">
+                        <a href="{% url 'accounts:register' %}" class="btn btn-hero me-3">
+                            <i class="fas fa-rocket me-2"></i>Criar Conta Grátis
+                        </a>
+                        <a href="{% url 'accounts:login' %}" class="btn btn-secondary-hero">
+                            <i class="fas fa-sign-in-alt me-2"></i>Já tenho conta
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6 text-center">
+                    <div style="background: rgba(255,255,255,0.1); border-radius: 20px; padding: 2rem; backdrop-filter: blur(10px);">
+                        <i class="fas fa-chart-line" style="font-size: 8rem; color: rgba(255,255,255,0.8);"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- DASN-SIMEI Highlight Banner -->
+    <section style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); padding: 1.5rem 0; margin: 0;">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-2 text-center">
+                    <i class="fas fa-file-invoice fa-3x text-white"></i>
+                </div>
+                <div class="col-md-7">
+                    <h4 class="text-white mb-1" style="font-weight: 700;">🔥 EXCLUSIVO: Relatório DASN-SIMEI Automático</h4>
+                    <p class="text-white mb-0" style="opacity: 0.9;">Gere automaticamente a declaração anual obrigatória para MEI. Economize tempo e evite multas da Receita Federal!</p>
+                </div>
+                <div class="col-md-3 text-center">
+                    <a href="{% url 'accounts:register' %}" class="btn" style="background: white; color: #f59e0b; font-weight: 600; border: none; padding: 0.7rem 1.5rem; border-radius: 8px;">
+                        <i class="fas fa-star me-1"></i>Teste Grátis
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3 stat-card">
+                    <span class="stat-number">96%</span>
+                    <div class="stat-label">Economia vs Concorrentes</div>
+                </div>
+                <div class="col-md-3 stat-card">
+                    <span class="stat-number">19.100%</span>
+                    <div class="stat-label">ROI Máximo</div>
+                </div>
+                <div class="col-md-3 stat-card">
+                    <span class="stat-number">15h</span>
+                    <div class="stat-label">Economia de Tempo/Mês</div>
+                </div>
+                <div class="col-md-3 stat-card">
+                    <span class="stat-number">10+</span>
+                    <div class="stat-label">Recursos Exclusivos</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">Recursos pensados especificamente para MEIs</h2>
+            <div class="row g-4">
+                <div class="col-lg-4 col-md-6">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <h5>IA Financeira para MEIs</h5>
+                        <p>Score de saúde financeira, detecção automática de anomalias e previsões baseadas em machine learning. Perfeito para MEIs que precisam tomar decisões financeiras inteligentes.</p>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 col-md-6">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        <h5>Relatórios Simples e Profissionais</h5>
+                        <p>Exportação em PDF com visual corporativo, planilhas Excel e dashboards fáceis de entender. Ideal para MEIs apresentarem suas finanças para bancos e clientes.</p>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 col-md-6">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <h5>Gestão Multi-Negócios</h5>
+                        <p>Perfeito para MEIs que têm mais de um negócio ou atividade. Gerencie todas suas fontes de renda com controle total e dados organizados.</p>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 col-md-6">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h5>Segurança Avançada</h5>
+                        <p>Autenticação dupla, arquitetura Django robusta e validação de dados em múltiplas camadas.</p>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 col-md-6">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-magic"></i>
+                        </div>
+                        <h5>Automação para MEIs</h5>
+                        <p>Categorização automática de receitas e despesas, cálculo de saldos e alertas preventivos. Economize tempo e foque no que realmente importa: seu negócio.</p>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 col-md-6">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-file-invoice text-warning"></i>
+                        </div>
+                        <h5>Relatório DASN-SIMEI</h5>
+                        <p>Gere automaticamente o relatório anual obrigatório para MEI com todos os dados necessários para a Receita Federal.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Comparison Section -->
+    <section class="comparison-section">
+        <div class="container">
+            <h2 class="section-title">Compare com outras soluções para MEIs</h2>
+            <div class="table-responsive">
+                <table class="table comparison-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 20%;">Concorrente</th>
+                            <th style="width: 15%;">Preço/Mês</th>
+                            <th style="width: 20%;">IA & Automação</th>
+                            <th style="width: 15%;">DASN-SIMEI</th>
+                            <th style="width: 20%;">Interface</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>QuickBooks Online</strong></td>
+                            <td><span style="color: var(--danger); font-weight: 600;">R$ 89</span></td>
+                            <td><i class="fas fa-times text-danger"></i> Sem IA</td>
+                            <td><i class="fas fa-times text-danger"></i> Manual</td>
+                            <td><i class="fas fa-times text-danger"></i> Complexa</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Conta Azul</strong></td>
+                            <td><span style="color: var(--danger); font-weight: 600;">R$ 78</span></td>
+                            <td><i class="fas fa-times text-danger"></i> Alertas Básicos</td>
+                            <td><i class="fas fa-times text-danger"></i> Inexistente</td>
+                            <td><i class="fas fa-check text-success"></i> Boa</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Granatum</strong></td>
+                            <td><span style="color: var(--danger); font-weight: 600;">R$ 67</span></td>
+                            <td><i class="fas fa-times text-danger"></i> Limitada</td>
+                            <td><i class="fas fa-times text-danger"></i> Inexistente</td>
+                            <td><i class="fas fa-times text-danger"></i> Antiga</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Finansys</strong></td>
+                            <td><span style="color: var(--warning); font-weight: 600;">R$ 45</span></td>
+                            <td><i class="fas fa-times text-danger"></i> Sem IA</td>
+                            <td><i class="fas fa-times text-danger"></i> Manual</td>
+                            <td><i class="fas fa-minus text-warning"></i> Básica</td>
+                        </tr>
+                        <tr class="highlight-row">
+                            <td><strong style="color: var(--primary);">CashFlow Manager</strong></td>
+                            <td><strong style="color: var(--success); font-size: 1.2rem;">R$ 59,90</strong></td>
+                            <td><i class="fas fa-check text-success"></i> <strong>IA Completa</strong></td>
+                            <td><i class="fas fa-star text-warning"></i> <strong>Automático</strong></td>
+                            <td><i class="fas fa-check text-success"></i> <strong>Premium</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- ROI Section -->
+    <section class="roi-section">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <h2 class="text-center mb-4" style="color: white; font-size: 2.5rem; font-weight: 700;">ROI Comprovado para MEIs</h2>
+                    
+                    <div class="roi-card">
+                        <div class="roi-item">
+                            <span>Economia de Tempo (10-15h/mês)</span>
+                            <strong>R$ 500-750</strong>
+                        </div>
+                        <div class="roi-item">
+                            <span>Decisões Melhores (evita perdas)</span>
+                            <strong>R$ 1.000-5.000</strong>
+                        </div>
+                        <div class="roi-item">
+                            <span>Eficiência Operacional</span>
+                            <strong>R$ 300-800</strong>
+                        </div>
+                        <div class="roi-item">
+                            <span>Visibilidade Financeira</span>
+                            <strong>R$ 1.000-3.000</strong>
+                        </div>
+                        <div class="roi-item">
+                            <span>RETORNO TOTAL MENSAL</span>
+                            <strong style="color: #fbbf24; font-size: 1.5rem;">R$ 2.800-9.550</strong>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <p style="font-size: 1.2rem; opacity: 0.9;">
+                            <strong>Investimento:</strong> R$ 59,90/mês &nbsp;|&nbsp; 
+                            <strong style="color: #fbbf24;">ROI: 4.700-16.000%</strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section" id="planos">
+        <div class="container">
+            <div class="cta-content">
+                <h2 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 1.5rem;">Ideal para seu MEI crescer</h2>
+                <p class="lead" style="color: var(--text-light); margin-bottom: 2rem;">
+                    Junte-se aos MEIs que já economizam tempo e dinheiro com decisões financeiras inteligentes. Tenha o controle total das suas finanças.
+                </p>
+                
+                <div style="background: var(--secondary); border-radius: 20px; padding: 2rem; margin-bottom: 2rem;">
+                    <div class="row align-items-center">
+                        <div class="col-md-8 text-start">
+                            <h3 style="color: var(--primary); margin-bottom: 0.5rem;">Plano MEI Completo</h3>
+                            <p style="margin-bottom: 0; color: var(--text-light);">Acesso total a todos os recursos de IA, relatórios e automação pensados para MEIs</p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div style="font-size: 2rem; font-weight: 700; color: var(--primary);">R$ 59,90<span style="font-size: 1rem; opacity: 0.7;">/mês</span></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <a href="{% url 'accounts:register' %}" class="btn btn-hero" style="background: var(--gradient); color: white; margin-right: 1rem;">
+                    <i class="fas fa-rocket me-2"></i>Criar Conta Grátis
+                </a>
+                
+                <a href="{% url 'accounts:login' %}" class="btn btn-secondary-hero" style="color: var(--primary); border: 2px solid var(--primary); background: transparent;">
+                    <i class="fas fa-sign-in-alt me-2"></i>Já tenho conta
+                </a>
+                
+                <div class="mt-4" style="color: var(--text-light); font-size: 0.9rem;">
+                    <i class="fas fa-shield-alt me-2"></i>30 dias de garantia
+                    &nbsp;&nbsp;&nbsp;
+                    <i class="fas fa-credit-card me-2"></i>Cancele a qualquer momento
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p class="mb-0">&copy; 2025 CashFlow Manager. Transformando a gestão financeira de MEIs.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Smooth scrolling
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+        
+        // Animation on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate-fade-in');
+                }
+            });
+        }, observerOptions);
+        
+        document.querySelectorAll('.feature-card, .stat-card').forEach(el => {
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,267 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Relatórios{% endblock %}
+
+{% block extra_css %}
+<style>
+.report-card {
+    border: none;
+    border-radius: 15px;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border-left: 5px solid #e5e7eb;
+}
+
+.report-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.report-card.financial {
+    border-left-color: #3b82f6;
+}
+
+.report-card.cash-flow {
+    border-left-color: #10b981;
+}
+
+.report-card.dasn-simei {
+    border-left-color: #f59e0b;
+}
+
+.report-card.alerts {
+    border-left-color: #ef4444;
+}
+
+.report-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin-bottom: 15px;
+}
+
+.report-icon.financial {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+}
+
+.report-icon.cash-flow {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+}
+
+.report-icon.dasn-simei {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+}
+
+.report-icon.alerts {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+}
+
+.stats-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 25px;
+}
+
+.stats-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.btn-report {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    border: none;
+    border-radius: 10px;
+    padding: 12px 20px;
+    color: white;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.btn-report:hover {
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
+}
+
+.btn-report.warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.btn-report.warning:hover {
+    box-shadow: 0 5px 15px rgba(245, 158, 11, 0.4);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-1">Relatórios</h1>
+                    <p class="text-muted mb-0">Gere relatórios detalhados e análises financeiras</p>
+                </div>
+            </div>
+
+            <!-- Estatísticas rápidas -->
+            <div class="row mb-5">
+                <div class="col-md-4">
+                    <div class="stats-card text-center">
+                        <div class="stats-number">{{ total_transactions }}</div>
+                        <div>Transações Registradas</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stats-card text-center">
+                        <div class="stats-number">{{ total_categories }}</div>
+                        <div>Categorias Ativas</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stats-card text-center">
+                        <div class="stats-number">{{ total_accounts }}</div>
+                        <div>Contas Gerenciadas</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Relatórios disponíveis -->
+            <div class="row">
+                <div class="col-lg-6 col-xl-4 mb-4">
+                    <div class="card report-card financial h-100">
+                        <div class="card-body">
+                            <div class="report-icon financial">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <h5 class="card-title">Relatório Financeiro</h5>
+                            <p class="card-text text-muted">
+                                Análise completa de receitas, despesas e resultado líquido por período e categoria.
+                            </p>
+                            <div class="mt-auto">
+                                <a href="{% url 'reports:financial' %}" class="btn-report">
+                                    <i class="fas fa-chart-bar me-2"></i>Gerar Relatório
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6 col-xl-4 mb-4">
+                    <div class="card report-card cash-flow h-100">
+                        <div class="card-body">
+                            <div class="report-icon cash-flow">
+                                <i class="fas fa-money-bill-wave"></i>
+                            </div>
+                            <h5 class="card-title">Fluxo de Caixa</h5>
+                            <p class="card-text text-muted">
+                                Visualize a evolução do seu fluxo de caixa mensal com gráficos interativos.
+                            </p>
+                            <div class="mt-auto">
+                                <a href="{% url 'reports:cash_flow' %}" class="btn-report">
+                                    <i class="fas fa-chart-area me-2"></i>Ver Fluxo
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6 col-xl-4 mb-4">
+                    <div class="card report-card dasn-simei h-100">
+                        <div class="card-body">
+                            <div class="report-icon dasn-simei">
+                                <i class="fas fa-file-invoice"></i>
+                            </div>
+                            <h5 class="card-title">DASN-SIMEI</h5>
+                            <p class="card-text text-muted">
+                                Declaração Anual do MEI. Relatório completo para auxiliar no preenchimento junto à Receita Federal.
+                            </p>
+                            <div class="mt-auto">
+                                <a href="{% url 'reports:dasn_simei' %}" class="btn-report warning">
+                                    <i class="fas fa-file-pdf me-2"></i>Gerar DASN-SIMEI
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6 col-xl-4 mb-4">
+                    <div class="card report-card alerts h-100">
+                        <div class="card-body">
+                            <div class="report-icon alerts">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <h5 class="card-title">Alertas Inteligentes</h5>
+                            <p class="card-text text-muted">
+                                Monitore alertas automáticos sobre sua situação financeira e oportunidades de melhoria.
+                            </p>
+                            <div class="mt-auto">
+                                <a href="{% url 'reports:alert_list' %}" class="btn-report">
+                                    <i class="fas fa-bell me-2"></i>Ver Alertas
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dicas úteis -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-lightbulb me-2 text-warning"></i>
+                                Dicas para Relatórios
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <h6 class="text-primary">📊 Frequência Recomendada</h6>
+                                    <ul class="list-unstyled small text-muted">
+                                        <li>• Relatório Financeiro: Mensal</li>
+                                        <li>• Fluxo de Caixa: Semanal</li>
+                                        <li>• DASN-SIMEI: Anual (até maio)</li>
+                                        <li>• Alertas: Diário</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-4">
+                                    <h6 class="text-success">🎯 Melhores Práticas</h6>
+                                    <ul class="list-unstyled small text-muted">
+                                        <li>• Categorize todas as transações</li>
+                                        <li>• Mantenha dados atualizados</li>
+                                        <li>• Compare períodos similares</li>
+                                        <li>• Archive relatórios importantes</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-4">
+                                    <h6 class="text-warning">⚠️ Obrigatórios para MEI</h6>
+                                    <ul class="list-unstyled small text-muted">
+                                        <li>• DASN-SIMEI anual</li>
+                                        <li>• Controle de receitas</li>
+                                        <li>• Relatório de notas fiscais</li>
+                                        <li>• Backup dos comprovantes</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,618 +1,1535 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ page_title }}</title>
-    <meta name="description" content="{{ meta_description }}">
-    <meta name="keywords" content="gestão financeira, fluxo de caixa, inteligência artificial, dashboard financeiro, relatórios empresariais">
-    
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
+    <title>{{ page_title|default:'CashFlow Manager - Gestão Financeira Inteligente' }}</title>
+    <meta name="description" content="{{ meta_description|default:'Sistema completo de gestão financeira com IA para MEIs' }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
     <style>
         :root {
-            --primary-color: #007bff;
-            --secondary-color: #28a745;
-            --accent-color: #17a2b8;
-            --dark-color: #343a40;
-            --light-color: #f8f9fa;
-            --purple-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --purple-gradient-hover: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
-            --gradient-secondary: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
-            --shadow-soft: 0 2px 12px rgba(0,0,0,0.08);
-            --shadow-medium: 0 4px 16px rgba(0,0,0,0.12);
-            --border-radius: 8px;
-            --transition: all 0.3s ease;
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #f1f5f9;
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        
+        * { box-sizing: border-box; }
+        
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.7;
-            color: var(--dark-color);
-            overflow-x: hidden;
-            background-color: #f5f6fa;
+            font-family: 'Inter', sans-serif;
+            background: #ffffff;
+            color: var(--text-dark);
+            line-height: 1.6;
         }
-
-        .hero-section {
-            background: var(--purple-gradient);
+        
+        /* Hero Section */
+        .hero {
+            background: var(--gradient);
             min-height: 100vh;
             display: flex;
             align-items: center;
             position: relative;
             overflow: hidden;
         }
-
-        .hero-section::before {
+        
+        .hero::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-            opacity: 0.3;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><defs><radialGradient id="a"><stop offset="0%" stop-color="%23ffffff" stop-opacity="0.1"/><stop offset="100%" stop-color="%23ffffff" stop-opacity="0"/></radialGradient></defs><circle cx="200" cy="200" r="180" fill="url(%23a)"/><circle cx="800" cy="300" r="120" fill="url(%23a)"/><circle cx="400" cy="700" r="150" fill="url(%23a)"/></svg>');
+            opacity: 0.1;
         }
-
+        
         .hero-content {
             position: relative;
             z-index: 2;
+            color: white;
         }
-
-        .hero-title {
+        
+        .hero h1 {
             font-size: 3.5rem;
             font-weight: 700;
-            color: white;
-            margin-bottom: 1.5rem;
             line-height: 1.2;
+            margin-bottom: 1.5rem;
         }
-
-        .hero-subtitle {
-            font-size: 1.3rem;
-            color: rgba(255,255,255,0.9);
-            margin-bottom: 2rem;
+        
+        .hero .lead {
+            font-size: 1.25rem;
             font-weight: 400;
-        }
-
-        .price-highlight {
-            background: rgba(255,255,255,0.15);
-            border: 2px solid rgba(255,255,255,0.2);
-            border-radius: 20px;
-            padding: 1.5rem 2rem;
-            display: inline-block;
+            opacity: 0.9;
             margin-bottom: 2rem;
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
         }
-
-        .price-old {
-            text-decoration: line-through;
-            color: rgba(255,255,255,0.7);
-            font-size: 1.2rem;
-            display: block;
+        
+        .price-container {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            margin: 2rem 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
-
-        .price-new {
-            font-size: 2.5rem;
+        
+        .price-tag {
+            font-size: 3.5rem;
             font-weight: 700;
             color: #fff;
-            display: block;
+            margin-bottom: 0.5rem;
         }
-
-        .roi-badge {
-            background: var(--gradient-secondary);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 50px;
-            font-weight: 600;
-            display: inline-block;
-            margin-top: 1rem;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
-        .btn-primary-custom {
-            background: var(--gradient-secondary);
-            border: none;
-            padding: 1rem 2.5rem;
+        
+        .price-subtitle {
+            opacity: 0.8;
             font-size: 1.1rem;
-            font-weight: 600;
+        }
+        
+        /* Buttons */
+        .btn-hero {
+            background: white;
+            color: var(--primary);
+            padding: 1rem 2.5rem;
             border-radius: 50px;
-            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+            border: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
             text-decoration: none;
             display: inline-block;
-            transition: var(--transition);
-            box-shadow: var(--shadow-soft);
         }
-
-        .btn-primary-custom:hover {
+        
+        .btn-hero:hover {
             transform: translateY(-2px);
-            box-shadow: var(--shadow-medium);
-            color: white;
-            background: linear-gradient(135deg, #1e7e34 0%, #155724 100%);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            color: var(--primary-dark);
         }
-
-        .section-padding {
+        
+        .btn-secondary-hero {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-secondary-hero:hover {
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        /* Sections */
+        .section {
             padding: 5rem 0;
         }
-
+        
         .section-title {
             font-size: 2.5rem;
             font-weight: 700;
             text-align: center;
             margin-bottom: 3rem;
-            color: var(--dark-color);
+            color: var(--text-dark);
         }
-
+        
+        /* Feature Cards */
         .feature-card {
             background: white;
-            border-radius: var(--border-radius);
+            border-radius: 20px;
             padding: 2.5rem;
-            box-shadow: var(--shadow-soft);
-            transition: var(--transition);
-            margin-bottom: 2rem;
-            border: 1px solid rgba(0,0,0,0.05);
+            text-align: center;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.05);
+            border: 1px solid #f1f5f9;
+            transition: all 0.3s ease;
             height: 100%;
         }
-
+        
         .feature-card:hover {
-            transform: translateY(-8px);
-            box-shadow: var(--shadow-medium);
-            border-color: rgba(102, 126, 234, 0.3);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
         }
-
+        
         .feature-icon {
             width: 80px;
             height: 80px;
-            background: var(--purple-gradient);
-            border-radius: var(--border-radius);
+            background: var(--gradient);
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 1.5rem;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .feature-icon::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 40px;
-            height: 40px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 50%;
-            transform: translate(15px, -15px);
-        }
-
-        .feature-icon i {
+            margin: 0 auto 1.5rem;
             font-size: 2rem;
             color: white;
-            position: relative;
-            z-index: 2;
         }
-
-        .feature-title {
-            font-size: 1.4rem;
+        
+        .feature-card h5 {
+            font-size: 1.3rem;
             font-weight: 600;
             margin-bottom: 1rem;
-            color: var(--dark-color);
+            color: var(--text-dark);
         }
-
-        .feature-description {
-            color: #6c757d;
-            line-height: 1.6;
-            margin-bottom: 1rem;
+        
+        .feature-card p {
+            color: var(--text-light);
+            font-size: 0.95rem;
         }
-
-        .pricing-table {
-            background: white;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow-medium);
-            overflow: hidden;
-            margin-bottom: 2rem;
-            border: 1px solid rgba(0,0,0,0.05);
+        
+        /* Stats Section */
+        .stats-section {
+            background: var(--secondary);
+            padding: 4rem 0;
         }
-
-        .pricing-header {
-            background: var(--purple-gradient);
-            color: white;
+        
+        .stat-card {
+            text-align: center;
             padding: 2rem;
-            text-align: center;
         }
-
-        .competitor-row {
-            display: flex;
-            align-items: center;
-            padding: 1rem 2rem;
-            border-bottom: 1px solid rgba(0,0,0,0.1);
-            transition: var(--transition);
-        }
-
-        .competitor-row:hover {
-            background-color: rgba(102, 126, 234, 0.05);
-        }
-
-        .competitor-name {
-            flex: 1;
-            font-weight: 500;
-        }
-
-        .competitor-price {
-            flex: 1;
-            text-align: center;
-            font-weight: 600;
-            color: var(--primary-color);
-        }
-
-        .competitor-features {
-            flex: 2;
-            text-align: right;
-        }
-
-        .highlight-row {
-            background: rgba(40, 167, 69, 0.1);
-            border-left: 5px solid var(--secondary-color);
-        }
-
-        .highlight-row:hover {
-            background: rgba(40, 167, 69, 0.15);
-        }
-
-        .cta-section {
-            background: var(--purple-gradient);
-            color: white;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .cta-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="cta-grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.05)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23cta-grain)"/></svg>');
-            opacity: 0.6;
-        }
-
-        .stats-counter {
+        
+        .stat-number {
             font-size: 3rem;
             font-weight: 700;
-            color: transparent;
-            background: var(--purple-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: var(--primary);
             display: block;
         }
-
-        .stats-label {
-            font-size: 1.1rem;
-            color: #6c757d;
+        
+        .stat-label {
+            color: var(--text-light);
+            font-weight: 500;
             margin-top: 0.5rem;
         }
-
-        .value-proposition {
-            background: rgba(102, 126, 234, 0.1);
-            border-left: 5px solid #667eea;
-            padding: 2rem;
-            border-radius: var(--border-radius);
-            margin: 2rem 0;
-        }
-
-        .dashboard-preview {
-            background: rgba(255,255,255,0.15);
-            border-radius: var(--border-radius);
-            padding: 2rem;
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-
-        .preview-card {
+        
+        /* Comparison Table */
+        .comparison-section {
             background: white;
-            border-radius: var(--border-radius);
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            transition: var(--transition);
+            padding: 5rem 0;
         }
-
-        .preview-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        
+        .comparison-table {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.05);
+            border: none;
         }
-
-        @media (max-width: 768px) {
-            .hero-title {
-                font-size: 2.5rem;
-            }
-            
-            .hero-subtitle {
-                font-size: 1.1rem;
-            }
-            
-            .section-title {
-                font-size: 2rem;
-            }
-            
-            .price-new {
-                font-size: 2rem;
-            }
-            
-            .feature-card {
-                text-align: center;
-            }
-        }
-
-        .floating-action {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            z-index: 1000;
-            animation: bounce 2s infinite;
-        }
-
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-10px); }
-            60% { transform: translateY(-5px); }
-        }
-
-        .ai-badge {
-            background: var(--purple-gradient);
+        
+        .comparison-table thead th {
+            background: var(--primary);
             color: white;
-            padding: 0.3rem 0.8rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
             font-weight: 600;
-            margin-left: 0.5rem;
+            padding: 1.5rem;
+            border: none;
         }
-
-        .btn-outline-light:hover {
-            background-color: rgba(255,255,255,0.1);
-            border-color: white;
+        
+        .comparison-table td {
+            padding: 1.5rem;
+            vertical-align: middle;
+            border: none;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        
+        .comparison-table .highlight-row {
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+        }
+        
+        /* ROI Section */
+        .roi-section {
+            background: var(--gradient);
             color: white;
+            padding: 5rem 0;
+            position: relative;
         }
-
-        .text-gradient {
-            background: var(--purple-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        
+        .roi-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 3rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
-
-        /* Animações adicionais */
+        
+        .roi-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .roi-item:last-child {
+            border-bottom: none;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+        
+        /* CTA Section */
+        .cta-section {
+            background: white;
+            padding: 5rem 0;
+            text-align: center;
+        }
+        
+        .cta-content {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        /* Footer */
+        .footer {
+            background: var(--text-dark);
+            color: white;
+            padding: 3rem 0;
+            text-align: center;
+        }
+        
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
         .animate-fade-in {
-            animation: fadeIn 0.6s ease-out forwards;
+            animation: fadeInUp 0.8s ease-out;
         }
-
-        @keyframes fadeIn {
-            from { 
-                opacity: 0; 
-                transform: translateY(30px); 
-            }
-            to { 
-                opacity: 1; 
-                transform: translateY(0); 
-            }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.5rem; }
+            .price-tag { font-size: 2.5rem; }
+            .section-title { font-size: 2rem; }
+            .feature-card { padding: 2rem 1.5rem; }
         }
-
-        .feature-card:nth-child(1) { animation-delay: 0.1s; }
-        .feature-card:nth-child(2) { animation-delay: 0.2s; }
-        .feature-card:nth-child(3) { animation-delay: 0.3s; }
-        .feature-card:nth-child(4) { animation-delay: 0.4s; }
-        .feature-card:nth-child(5) { animation-delay: 0.5s; }
-        .feature-card:nth-child(6) { animation-delay: 0.6s; }
     </style>
 </head>
-<body>
 
-    <!-- Hero Section -->
-    <section class="hero-section">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-lg-6">
-                    <div class="hero-content">
-                        <h1 class="hero-title">
-                            Gestão Financeira <br>
-                            <span class="text-warning">Inteligente</span>
-                            <span class="ai-badge">✨ COM IA</span>
-                        </h1>
-                        <p class="hero-subtitle">
-                            Sistema completo com inteligência artificial, relatórios profissionais e análises avançadas para transformar a gestão financeira da sua empresa.
-                        </p>
-                        
-                        <div class="price-highlight">
-                            <span class="price-old">De R$ 760-1.420/mês</span>
-                            <span class="price-new">Por apenas R$ 49,90/mês</span>
-                            <div class="roi-badge">
-                                🚀 ROI até 19.100%
-                            </div>
-                        </div>
+        :root {    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-                        <div class="d-flex flex-wrap gap-3">
-                            <form method="post" action="{% url 'landing:start_trial' %}" class="d-inline">
-                                {% csrf_token %}
-                                <button type="submit" class="btn-primary-custom border-0">
-                                    <i class="fas fa-rocket me-2"></i>
-                                    Começar Agora - 7 Dias Grátis
-                                </button>
-                            </form>
-                            <a href="#features" class="btn btn-outline-light btn-lg">
-                                <i class="fas fa-play me-2"></i>
-                                Ver Demonstração
-                            </a>
-                        </div>
+            --primary: #6366f1;    <!-- Font Awesome -->
+
+            --primary-dark: #4f46e5;    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+            --secondary: #f1f5f9;    <!-- Google Fonts -->
+
+            --text-dark: #1e293b;    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+            --text-light: #64748b;    
+
+            --success: #10b981;    <style>
+
+            --warning: #f59e0b;        :root {
+
+            --danger: #ef4444;            --primary-color: #007bff;
+
+            --gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);            --secondary-color: #28a745;
+
+        }            --accent-color: #17a2b8;
+
+                    --dark-color: #343a40;
+
+        * { box-sizing: border-box; }            --light-color: #f8f9fa;
+
+                    --purple-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+        body {            --purple-gradient-hover: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+
+            font-family: 'Inter', sans-serif;            --gradient-secondary: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+
+            background: #ffffff;            --shadow-soft: 0 2px 12px rgba(0,0,0,0.08);
+
+            color: var(--text-dark);            --shadow-medium: 0 4px 16px rgba(0,0,0,0.12);
+
+            line-height: 1.6;            --border-radius: 8px;
+
+        }            --transition: all 0.3s ease;
+
+                }
+
+        /* Hero Section */
+
+        .hero {        * {
+
+            background: var(--gradient);            margin: 0;
+
+            min-height: 100vh;            padding: 0;
+
+            display: flex;            box-sizing: border-box;
+
+            align-items: center;        }
+
+            position: relative;
+
+            overflow: hidden;        body {
+
+        }            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+                    line-height: 1.7;
+
+        .hero::before {            color: var(--dark-color);
+
+            content: '';            overflow-x: hidden;
+
+            position: absolute;            background-color: #f5f6fa;
+
+            top: 0;        }
+
+            left: 0;
+
+            right: 0;        .hero-section {
+
+            bottom: 0;            background: var(--purple-gradient);
+
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><defs><radialGradient id="a"><stop offset="0%" stop-color="%23ffffff" stop-opacity="0.1"/><stop offset="100%" stop-color="%23ffffff" stop-opacity="0"/></radialGradient></defs><circle cx="200" cy="200" r="180" fill="url(%23a)"/><circle cx="800" cy="300" r="120" fill="url(%23a)"/><circle cx="400" cy="700" r="150" fill="url(%23a)"/></svg>');            min-height: 100vh;
+
+            opacity: 0.1;            display: flex;
+
+        }            align-items: center;
+
+                    position: relative;
+
+        .hero-content {            overflow: hidden;
+
+            position: relative;        }
+
+            z-index: 2;
+
+            color: white;        .hero-section::before {
+
+        }            content: '';
+
+                    position: absolute;
+
+        .hero h1 {            top: 0;
+
+            font-size: 3.5rem;            left: 0;
+
+            font-weight: 700;            right: 0;
+
+            line-height: 1.2;            bottom: 0;
+
+            margin-bottom: 1.5rem;            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+
+        }            opacity: 0.3;
+
+                }
+
+        .hero .lead {
+
+            font-size: 1.25rem;        .hero-content {
+
+            font-weight: 400;            position: relative;
+
+            opacity: 0.9;            z-index: 2;
+
+            margin-bottom: 2rem;        }
+
+        }
+
+                .hero-title {
+
+        .price-container {            font-size: 3.5rem;
+
+            background: rgba(255, 255, 255, 0.15);            font-weight: 700;
+
+            backdrop-filter: blur(10px);            color: white;
+
+            border-radius: 20px;            margin-bottom: 1.5rem;
+
+            padding: 2rem;            line-height: 1.2;
+
+            margin: 2rem 0;        }
+
+            border: 1px solid rgba(255, 255, 255, 0.2);
+
+        }        .hero-subtitle {
+
+                    font-size: 1.3rem;
+
+        .price-tag {            color: rgba(255,255,255,0.9);
+
+            font-size: 3.5rem;            margin-bottom: 2rem;
+
+            font-weight: 700;            font-weight: 400;
+
+            color: #fff;        }
+
+            margin-bottom: 0.5rem;
+
+        }        .price-highlight {
+
+                    background: rgba(255,255,255,0.15);
+
+        .price-subtitle {            border: 2px solid rgba(255,255,255,0.2);
+
+            opacity: 0.8;            border-radius: 20px;
+
+            font-size: 1.1rem;            padding: 1.5rem 2rem;
+
+        }            display: inline-block;
+
+                    margin-bottom: 2rem;
+
+        /* Buttons */            backdrop-filter: blur(15px);
+
+        .btn-hero {            -webkit-backdrop-filter: blur(15px);
+
+            background: white;        }
+
+            color: var(--primary);
+
+            padding: 1rem 2.5rem;        .price-old {
+
+            border-radius: 50px;            text-decoration: line-through;
+
+            font-weight: 600;            color: rgba(255,255,255,0.7);
+
+            font-size: 1.1rem;            font-size: 1.2rem;
+
+            border: none;            display: block;
+
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);        }
+
+            transition: all 0.3s ease;
+
+            text-decoration: none;        .price-new {
+
+            display: inline-block;            font-size: 2.5rem;
+
+        }            font-weight: 700;
+
+                    color: #fff;
+
+        .btn-hero:hover {            display: block;
+
+            transform: translateY(-2px);        }
+
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+
+            color: var(--primary-dark);        .roi-badge {
+
+        }            background: var(--gradient-secondary);
+
+                    color: white;
+
+        .btn-secondary-hero {            padding: 0.5rem 1rem;
+
+            background: rgba(255, 255, 255, 0.15);            border-radius: 50px;
+
+            color: white;            font-weight: 600;
+
+            padding: 1rem 2.5rem;            display: inline-block;
+
+            border-radius: 50px;            margin-top: 1rem;
+
+            font-weight: 600;            animation: pulse 2s infinite;
+
+            font-size: 1.1rem;        }
+
+            border: 2px solid rgba(255, 255, 255, 0.3);
+
+            backdrop-filter: blur(10px);        @keyframes pulse {
+
+            transition: all 0.3s ease;            0%, 100% { transform: scale(1); }
+
+            text-decoration: none;            50% { transform: scale(1.05); }
+
+            display: inline-block;        }
+
+        }
+
+                .btn-primary-custom {
+
+        .btn-secondary-hero:hover {            background: var(--gradient-secondary);
+
+            background: rgba(255, 255, 255, 0.25);            border: none;
+
+            color: white;            padding: 1rem 2.5rem;
+
+            transform: translateY(-2px);            font-size: 1.1rem;
+
+        }            font-weight: 600;
+
+                    border-radius: 50px;
+
+        /* Sections */            color: white;
+
+        .section {            text-decoration: none;
+
+            padding: 5rem 0;            display: inline-block;
+
+        }            transition: var(--transition);
+
+                    box-shadow: var(--shadow-soft);
+
+        .section-title {        }
+
+            font-size: 2.5rem;
+
+            font-weight: 700;        .btn-primary-custom:hover {
+
+            text-align: center;            transform: translateY(-2px);
+
+            margin-bottom: 3rem;            box-shadow: var(--shadow-medium);
+
+            color: var(--text-dark);            color: white;
+
+        }            background: linear-gradient(135deg, #1e7e34 0%, #155724 100%);
+
+                }
+
+        /* Feature Cards */
+
+        .feature-card {        .section-padding {
+
+            background: white;            padding: 5rem 0;
+
+            border-radius: 20px;        }
+
+            padding: 2.5rem;
+
+            text-align: center;        .section-title {
+
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.05);            font-size: 2.5rem;
+
+            border: 1px solid #f1f5f9;            font-weight: 700;
+
+            transition: all 0.3s ease;            text-align: center;
+
+            height: 100%;            margin-bottom: 3rem;
+
+        }            color: var(--dark-color);
+
+                }
+
+        .feature-card:hover {
+
+            transform: translateY(-5px);        .feature-card {
+
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);            background: white;
+
+        }            border-radius: var(--border-radius);
+
+                    padding: 2.5rem;
+
+        .feature-icon {            box-shadow: var(--shadow-soft);
+
+            width: 80px;            transition: var(--transition);
+
+            height: 80px;            margin-bottom: 2rem;
+
+            background: var(--gradient);            border: 1px solid rgba(0,0,0,0.05);
+
+            border-radius: 50%;            height: 100%;
+
+            display: flex;        }
+
+            align-items: center;
+
+            justify-content: center;        .feature-card:hover {
+
+            margin: 0 auto 1.5rem;            transform: translateY(-8px);
+
+            font-size: 2rem;            box-shadow: var(--shadow-medium);
+
+            color: white;            border-color: rgba(102, 126, 234, 0.3);
+
+        }        }
+
+        
+
+        .feature-card h5 {        .feature-icon {
+
+            font-size: 1.3rem;            width: 80px;
+
+            font-weight: 600;            height: 80px;
+
+            margin-bottom: 1rem;            background: var(--purple-gradient);
+
+            color: var(--text-dark);            border-radius: var(--border-radius);
+
+        }            display: flex;
+
+                    align-items: center;
+
+        .feature-card p {            justify-content: center;
+
+            color: var(--text-light);            margin-bottom: 1.5rem;
+
+            font-size: 0.95rem;            position: relative;
+
+        }            overflow: hidden;
+
+                }
+
+        /* Stats Section */
+
+        .stats-section {        .feature-icon::before {
+
+            background: var(--secondary);            content: '';
+
+            padding: 4rem 0;            position: absolute;
+
+        }            top: 0;
+
+                    right: 0;
+
+        .stat-card {            width: 40px;
+
+            text-align: center;            height: 40px;
+
+            padding: 2rem;            background: rgba(255,255,255,0.1);
+
+        }            border-radius: 50%;
+
+                    transform: translate(15px, -15px);
+
+        .stat-number {        }
+
+            font-size: 3rem;
+
+            font-weight: 700;        .feature-icon i {
+
+            color: var(--primary);            font-size: 2rem;
+
+            display: block;            color: white;
+
+        }            position: relative;
+
+                    z-index: 2;
+
+        .stat-label {        }
+
+            color: var(--text-light);
+
+            font-weight: 500;        .feature-title {
+
+            margin-top: 0.5rem;            font-size: 1.4rem;
+
+        }            font-weight: 600;
+
+                    margin-bottom: 1rem;
+
+        /* Comparison Table */            color: var(--dark-color);
+
+        .comparison-section {        }
+
+            background: white;
+
+            padding: 5rem 0;        .feature-description {
+
+        }            color: #6c757d;
+
+                    line-height: 1.6;
+
+        .comparison-table {            margin-bottom: 1rem;
+
+            background: white;        }
+
+            border-radius: 15px;
+
+            overflow: hidden;        .pricing-table {
+
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.05);            background: white;
+
+            border: none;            border-radius: var(--border-radius);
+
+        }            box-shadow: var(--shadow-medium);
+
+                    overflow: hidden;
+
+        .comparison-table thead th {            margin-bottom: 2rem;
+
+            background: var(--primary);            border: 1px solid rgba(0,0,0,0.05);
+
+            color: white;        }
+
+            font-weight: 600;
+
+            padding: 1.5rem;        .pricing-header {
+
+            border: none;            background: var(--purple-gradient);
+
+        }            color: white;
+
+                    padding: 2rem;
+
+        .comparison-table td {            text-align: center;
+
+            padding: 1.5rem;        }
+
+            vertical-align: middle;
+
+            border: none;        .competitor-row {
+
+            border-bottom: 1px solid #f1f5f9;            display: flex;
+
+        }            align-items: center;
+
+                    padding: 1rem 2rem;
+
+        .comparison-table .highlight-row {            border-bottom: 1px solid rgba(0,0,0,0.1);
+
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);            transition: var(--transition);
+
+        }        }
+
+        
+
+        /* ROI Section */        .competitor-row:hover {
+
+        .roi-section {            background-color: rgba(102, 126, 234, 0.05);
+
+            background: var(--gradient);        }
+
+            color: white;
+
+            padding: 5rem 0;        .competitor-name {
+
+            position: relative;            flex: 1;
+
+        }            font-weight: 500;
+
+                }
+
+        .roi-card {
+
+            background: rgba(255, 255, 255, 0.15);        .competitor-price {
+
+            backdrop-filter: blur(10px);            flex: 1;
+
+            border-radius: 20px;            text-align: center;
+
+            padding: 3rem;            font-weight: 600;
+
+            border: 1px solid rgba(255, 255, 255, 0.2);            color: var(--primary-color);
+
+        }        }
+
+        
+
+        .roi-item {        .competitor-features {
+
+            display: flex;            flex: 2;
+
+            justify-content: space-between;            text-align: right;
+
+            align-items: center;        }
+
+            padding: 1rem 0;
+
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);        .highlight-row {
+
+        }            background: rgba(40, 167, 69, 0.1);
+
+                    border-left: 5px solid var(--secondary-color);
+
+        .roi-item:last-child {        }
+
+            border-bottom: none;
+
+            font-weight: 700;        .highlight-row:hover {
+
+            font-size: 1.2rem;            background: rgba(40, 167, 69, 0.15);
+
+        }        }
+
+        
+
+        /* CTA Section */        .cta-section {
+
+        .cta-section {            background: var(--purple-gradient);
+
+            background: white;            color: white;
+
+            padding: 5rem 0;            text-align: center;
+
+            text-align: center;            position: relative;
+
+        }            overflow: hidden;
+
+                }
+
+        .cta-content {
+
+            max-width: 600px;        .cta-section::before {
+
+            margin: 0 auto;            content: '';
+
+        }            position: absolute;
+
+                    top: 0;
+
+        /* Footer */            left: 0;
+
+        .footer {            right: 0;
+
+            background: var(--text-dark);            bottom: 0;
+
+            color: white;            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="cta-grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.05)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23cta-grain)"/></svg>');
+
+            padding: 3rem 0;            opacity: 0.6;
+
+            text-align: center;        }
+
+        }
+
+                .stats-counter {
+
+        /* Animations */            font-size: 3rem;
+
+        @keyframes fadeInUp {            font-weight: 700;
+
+            from {            color: transparent;
+
+                opacity: 0;            background: var(--purple-gradient);
+
+                transform: translateY(30px);            -webkit-background-clip: text;
+
+            }            -webkit-text-fill-color: transparent;
+
+            to {            background-clip: text;
+
+                opacity: 1;            display: block;
+
+                transform: translateY(0);        }
+
+            }
+
+        }        .stats-label {
+
+                    font-size: 1.1rem;
+
+        .animate-fade-in {            color: #6c757d;
+
+            animation: fadeInUp 0.8s ease-out;            margin-top: 0.5rem;
+
+        }        }
+
+        
+
+        /* Responsive */        .value-proposition {
+
+        @media (max-width: 768px) {            background: rgba(102, 126, 234, 0.1);
+
+            .hero h1 { font-size: 2.5rem; }            border-left: 5px solid #667eea;
+
+            .price-tag { font-size: 2.5rem; }            padding: 2rem;
+
+            .section-title { font-size: 2rem; }            border-radius: var(--border-radius);
+
+            .feature-card { padding: 2rem 1.5rem; }            margin: 2rem 0;
+
+        }        }
+
+    </style>
+
+</head>        .dashboard-preview {
+
+<body>            background: rgba(255,255,255,0.15);
+
+    <!-- Hero Section -->            border-radius: var(--border-radius);
+
+    <section class="hero">            padding: 2rem;
+
+        <div class="container">            backdrop-filter: blur(15px);
+
+            <div class="row align-items-center">            -webkit-backdrop-filter: blur(15px);
+
+                <div class="col-lg-6 hero-content">            border: 1px solid rgba(255,255,255,0.2);
+
+                    <h1 class="animate-fade-in">Gestão Financeira para <br><span style="background: linear-gradient(45deg, #fbbf24, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">MEIs</span> com <span style="background: linear-gradient(45deg, #fbbf24, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Inteligência Artificial</span></h1>        }
+
+                    <p class="lead animate-fade-in">O sistema completo que revoluciona a forma como <strong>Microempreendedores Individuais</strong> gerenciam suas finanças. Automatização, insights inteligentes e decisões baseadas em dados, feito especialmente para MEIs.</p>
+
+                            .preview-card {
+
+                    <div class="price-container animate-fade-in">            background: white;
+
+                        <div class="price-tag">R$ 59,90<span style="font-size: 1.2rem; opacity: 0.8;">/mês</span></div>            border-radius: var(--border-radius);
+
+                        <div class="price-subtitle">Preço especial para MEIs - 96% mais barato que concorrentes</div>            padding: 1.5rem;
+
+                    </div>            margin-bottom: 1rem;
+
+                                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+
+                    <div class="animate-fade-in">            transition: var(--transition);
+
+                        <a href="{% url 'accounts:register' %}" class="btn btn-hero me-3">        }
+
+                            <i class="fas fa-rocket me-2"></i>Criar Conta Grátis
+
+                        </a>        .preview-card:hover {
+
+                        <a href="{% url 'accounts:login' %}" class="btn btn-secondary-hero">            transform: translateY(-2px);
+
+                            <i class="fas fa-sign-in-alt me-2"></i>Já tenho conta            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+
+                        </a>        }
+
                     </div>
-                </div>
-                <div class="col-lg-6">
-                    <div class="text-center">
-                        <div class="dashboard-preview">
-                            <h3 class="text-white mb-3">
-                                <i class="fas fa-chart-line me-2"></i>
-                                Dashboard CashFlow Manager
-                            </h3>
-                            <div class="row">
-                                <div class="col-12 col-md-4 mb-3">
-                                    <div class="preview-card text-center">
-                                        <div class="metric-icon text-success" style="font-size: 2.5rem;">
-                                            <i class="fas fa-arrow-up"></i>
-                                        </div>
-                                        <h4 class="text-gradient mb-0">R$ 25.450</h4>
-                                        <small class="text-muted">Receitas do Mês</small>
-                                    </div>
-                                </div>
-                                <div class="col-12 col-md-4 mb-3">
-                                    <div class="preview-card text-center">
-                                        <div class="metric-icon" style="font-size: 2.5rem; color: #667eea;">
-                                            <i class="fas fa-brain"></i>
-                                        </div>
-                                        <h4 class="text-gradient mb-0">94/100</h4>
-                                        <small class="text-muted">Score de IA</small>
-                                    </div>
-                                </div>
-                                <div class="col-12 col-md-4 mb-3">
-                                    <div class="preview-card text-center">
-                                        <div class="metric-icon text-warning" style="font-size: 2.5rem;">
-                                            <i class="fas fa-exclamation-triangle"></i>
-                                        </div>
-                                        <h4 class="text-gradient mb-0">3</h4>
-                                        <small class="text-muted">Alertas IA</small>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="mt-3">
-                                <div class="preview-card">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span class="text-muted">Análise Inteligente</span>
-                                        <span class="badge bg-success">Saúde Excelente</span>
-                                    </div>
-                                    <div class="progress mt-2" style="height: 6px;">
-                                        <div class="progress-bar" style="width: 94%; background: linear-gradient(90deg, #28a745 0%, #20c997 100%);"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+
+                </div>        @media (max-width: 768px) {
+
+                            .hero-title {
+
+                <div class="col-lg-6 text-center">                font-size: 2.5rem;
+
+                    <div style="background: rgba(255,255,255,0.1); border-radius: 20px; padding: 2rem; backdrop-filter: blur(10px);">            }
+
+                        <i class="fas fa-chart-line" style="font-size: 8rem; color: rgba(255,255,255,0.8);"></i>            
+
+                    </div>            .hero-subtitle {
+
+                </div>                font-size: 1.1rem;
+
+            </div>            }
+
+        </div>            
+
+    </section>            .section-title {
+
+                font-size: 2rem;
+
+    <!-- Stats Section -->            }
+
+    <section class="stats-section">            
+
+        <div class="container">            .price-new {
+
+            <div class="row">                font-size: 2rem;
+
+                <div class="col-md-3 stat-card">            }
+
+                    <span class="stat-number">96%</span>            
+
+                    <div class="stat-label">Economia vs Concorrentes</div>            .feature-card {
+
+                </div>                text-align: center;
+
+                <div class="col-md-3 stat-card">            }
+
+                    <span class="stat-number">19.100%</span>        }
+
+                    <div class="stat-label">ROI Máximo</div>
+
+                </div>        .floating-action {
+
+                <div class="col-md-3 stat-card">            position: fixed;
+
+                    <span class="stat-number">15h</span>            bottom: 30px;
+
+                    <div class="stat-label">Economia de Tempo/Mês</div>            right: 30px;
+
+                </div>            z-index: 1000;
+
+                <div class="col-md-3 stat-card">            animation: bounce 2s infinite;
+
+                    <span class="stat-number">10+</span>        }
+
+                    <div class="stat-label">Recursos Exclusivos</div>
+
+                </div>        @keyframes bounce {
+
+            </div>            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+
+        </div>            40% { transform: translateY(-10px); }
+
+    </section>            60% { transform: translateY(-5px); }
+
+        }
 
     <!-- Features Section -->
-    <section id="features" class="section-padding bg-light">
-        <div class="container">
-            <h2 class="section-title">
-                🎯 Funcionalidades Premium que Justificam o Valor
-            </h2>
-            
-            <div class="row">
-                <div class="col-lg-4 col-md-6">
-                    <div class="feature-card animate-fade-in">
-                        <div class="feature-icon">
-                            <i class="fas fa-brain"></i>
-                        </div>
-                        <h3 class="feature-title">🧠 Inteligência Artificial Financeira</h3>
-                        <p class="feature-description">
-                            Score de saúde financeira, detecção automática de anomalias, alertas preventivos inteligentes e previsões baseadas em Machine Learning.
-                        </p>
-                        <small class="text-success fw-bold">Valor de mercado: R$ 150-300/mês</small>
-                    </div>
+
+    <section class="section">        .ai-badge {
+
+        <div class="container">            background: var(--purple-gradient);
+
+            <h2 class="section-title">Recursos pensados especificamente para MEIs</h2>            color: white;
+
+            <div class="row g-4">            padding: 0.3rem 0.8rem;
+
+                <div class="col-lg-4 col-md-6">            border-radius: 20px;
+
+                    <div class="feature-card">            font-size: 0.8rem;
+
+                        <div class="feature-icon">            font-weight: 600;
+
+                            <i class="fas fa-brain"></i>            margin-left: 0.5rem;
+
+                        </div>        }
+
+                        <h5>IA Financeira para MEIs</h5>
+
+                        <p>Score de saúde financeira, detecção automática de anomalias e previsões baseadas em machine learning. Perfeito para MEIs que precisam tomar decisões financeiras inteligentes.</p>        .btn-outline-light:hover {
+
+                    </div>            background-color: rgba(255,255,255,0.1);
+
+                </div>            border-color: white;
+
+                            color: white;
+
+                <div class="col-lg-4 col-md-6">        }
+
+                    <div class="feature-card">
+
+                        <div class="feature-icon">        .text-gradient {
+
+                            <i class="fas fa-chart-pie"></i>            background: var(--purple-gradient);
+
+                        </div>            -webkit-background-clip: text;
+
+                        <h5>Relatórios Simples e Profissionais</h5>            -webkit-text-fill-color: transparent;
+
+                        <p>Exportação em PDF com visual corporativo, planilhas Excel e dashboards fáceis de entender. Ideal para MEIs apresentarem suas finanças para bancos e clientes.</p>            background-clip: text;
+
+                    </div>        }
+
                 </div>
 
-                <div class="col-lg-4 col-md-6">
-                    <div class="feature-card animate-fade-in">
-                        <div class="feature-icon">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                        <h3 class="feature-title">📊 Relatórios Executivos Profissionais</h3>
-                        <p class="feature-description">
-                            Exportação PDF completa, planilhas Excel avançadas, gráficos interativos e dashboard em tempo real com métricas dinâmicas.
-                        </p>
-                        <small class="text-success fw-bold">Valor de mercado: R$ 80-150/mês</small>
-                    </div>
-                </div>
+                        /* Animações adicionais */
 
-                <div class="col-lg-4 col-md-6">
-                    <div class="feature-card animate-fade-in">
-                        <div class="feature-icon">
+                <div class="col-lg-4 col-md-6">        .animate-fade-in {
+
+                    <div class="feature-card">            animation: fadeIn 0.6s ease-out forwards;
+
+                        <div class="feature-icon">        }
+
                             <i class="fas fa-building"></i>
-                        </div>
-                        <h3 class="feature-title">🏢 Gestão Multi-Empresa</h3>
-                        <p class="feature-description">
-                            Suporte a múltiplas empresas, controle de acesso granular, dados isolados e seguros com troca rápida entre empresas.
-                        </p>
-                        <small class="text-success fw-bold">Valor de mercado: R$ 100-200/mês</small>
-                    </div>
-                </div>
 
-                <div class="col-lg-4 col-md-6">
-                    <div class="feature-card animate-fade-in">
-                        <div class="feature-icon">
-                            <i class="fas fa-shield-alt"></i>
-                        </div>
-                        <h3 class="feature-title">🔒 Segurança e Confiabilidade</h3>
-                        <p class="feature-description">
-                            Autenticação dupla, backend customizado de segurança, validação robusta e arquitetura Django profissional.
-                        </p>
-                        <small class="text-success fw-bold">Valor de mercado: R$ 50-100/mês</small>
-                    </div>
-                </div>
+                        </div>        @keyframes fadeIn {
 
-                <div class="col-lg-4 col-md-6">
-                    <div class="feature-card animate-fade-in">
-                        <div class="feature-icon">
-                            <i class="fas fa-palette"></i>
-                        </div>
-                        <h3 class="feature-title">💎 Interface Premium</h3>
-                        <p class="feature-description">
-                            Design responsivo moderno, UX otimizada, cores e temas customizáveis com interface intuitiva que reduz tempo de aprendizado.
-                        </p>
-                        <small class="text-success fw-bold">Valor de mercado: R$ 60-120/mês</small>
-                    </div>
-                </div>
+                        <h5>Gestão Multi-Negócios</h5>            from { 
 
-                <div class="col-lg-4 col-md-6">
-                    <div class="feature-card animate-fade-in">
-                        <div class="feature-icon">
-                            <i class="fas fa-robot"></i>
-                        </div>
-                        <h3 class="feature-title">🚀 Automação Inteligente</h3>
-                        <p class="feature-description">
-                            Cálculo automático de saldos, categorização inteligente, recorrência de transações e alertas automáticos de risco.
-                        </p>
-                        <small class="text-success fw-bold">Valor de mercado: R$ 80-160/mês</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+                        <p>Perfeito para MEIs que têm mais de um negócio ou atividade. Gerencie todas suas fontes de renda com controle total e dados organizados.</p>                opacity: 0; 
 
-    <!-- Competitive Analysis -->
-    <section class="section-padding">
+                    </div>                transform: translateY(30px); 
+
+                </div>            }
+
+                            to { 
+
+                <div class="col-lg-4 col-md-6">                opacity: 1; 
+
+                    <div class="feature-card">                transform: translateY(0); 
+
+                        <div class="feature-icon">            }
+
+                            <i class="fas fa-shield-alt"></i>        }
+
+                        </div>
+
+                        <h5>Segurança Avançada</h5>        .feature-card:nth-child(1) { animation-delay: 0.1s; }
+
+                        <p>Autenticação dupla, arquitetura Django robusta e validação de dados em múltiplas camadas.</p>        .feature-card:nth-child(2) { animation-delay: 0.2s; }
+
+                    </div>        .feature-card:nth-child(3) { animation-delay: 0.3s; }
+
+                </div>        .feature-card:nth-child(4) { animation-delay: 0.4s; }
+
+                        .feature-card:nth-child(5) { animation-delay: 0.5s; }
+
+                <div class="col-lg-4 col-md-6">        .feature-card:nth-child(6) { animation-delay: 0.6s; }
+
+                    <div class="feature-card">    </style>
+
+                        <div class="feature-icon"></head>
+
+                            <i class="fas fa-magic"></i><body>
+
+                        </div>
+
+                        <h5>Automação para MEIs</h5>    <!-- Hero Section -->
+
+                        <p>Categorização automática de receitas e despesas, cálculo de saldos e alertas preventivos. Economize tempo e foque no que realmente importa: seu negócio.</p>    <section class="hero-section">
+
+                    </div>        <div class="container">
+
+                </div>            <div class="row align-items-center">
+
+                                <div class="col-lg-6">
+
+                <div class="col-lg-4 col-md-6">                    <div class="hero-content">
+
+                    <div class="feature-card">                        <h1 class="hero-title">
+
+                        <div class="feature-icon">                            Gestão Financeira <br>
+
+                            <i class="fas fa-mobile-alt"></i>                            <span class="text-warning">Inteligente</span>
+
+                        </div>                            <span class="ai-badge">✨ COM IA</span>
+
+                        <h5>Mobile & PWA Ready</h5>                        </h1>
+
+                        <p>Interface responsiva, otimizada para todos os dispositivos com performance superior.</p>                        <p class="hero-subtitle">
+
+                    </div>                            Sistema completo com inteligência artificial, relatórios profissionais e análises avançadas para transformar a gestão financeira da sua empresa.
+
+                </div>                        </p>
+
+            </div>                        
+
+        </div>                        <div class="price-highlight">
+
+    </section>                            <span class="price-old">De R$ 760-1.420/mês</span>
+
+                            <span class="price-new">Por apenas R$ 49,90/mês</span>
+
+    <!-- Comparison Section -->                            <div class="roi-badge">
+
+    <section class="comparison-section">                                🚀 ROI até 19.100%
+
+        <div class="container">                            </div>
+
+            <h2 class="section-title">Compare com outras soluções para MEIs</h2>                        </div>
+
+            <div class="table-responsive">
+
+                <table class="table comparison-table">                        <div class="d-flex flex-wrap gap-3">
+
+                    <thead>                            <form method="post" action="{% url 'landing:start_trial' %}" class="d-inline">
+
+                        <tr>                                {% csrf_token %}
+
+                            <th style="width: 25%;">Concorrente</th>                                <button type="submit" class="btn-primary-custom border-0">
+
+                            <th style="width: 20%;">Preço/Mês</th>                                    <i class="fas fa-rocket me-2"></i>
+
+                            <th style="width: 30%;">IA & Automação</th>                                    Começar Agora - 7 Dias Grátis
+
+                            <th style="width: 25%;">Interface</th>                                </button>
+
+                        </tr>                            </form>
+
+                    </thead>                            <a href="#features" class="btn btn-outline-light btn-lg">
+
+                    <tbody>                                <i class="fas fa-play me-2"></i>
+
+                        <tr>                                Ver Demonstração
+
+                            <td><strong>QuickBooks Online</strong></td>                            </a>
+
+                            <td><span style="color: var(--danger); font-weight: 600;">R$ 89</span></td>                        </div>
+
+                            <td><i class="fas fa-times text-danger"></i> Sem IA</td>                    </div>
+
+                            <td><i class="fas fa-times text-danger"></i> Complexa</td>                </div>
+
+                        </tr>                <div class="col-lg-6">
+
+                        <tr>                    <div class="text-center">
+
+                            <td><strong>Conta Azul</strong></td>                        <div class="dashboard-preview">
+
+                            <td><span style="color: var(--danger); font-weight: 600;">R$ 78</span></td>                            <h3 class="text-white mb-3">
+
+                            <td><i class="fas fa-times text-danger"></i> Alertas Básicos</td>                                <i class="fas fa-chart-line me-2"></i>
+
+                            <td><i class="fas fa-check text-success"></i> Boa</td>                                Dashboard CashFlow Manager
+
+                        </tr>                            </h3>
+
+                        <tr>                            <div class="row">
+
+                            <td><strong>Granatum</strong></td>                                <div class="col-12 col-md-4 mb-3">
+
+                            <td><span style="color: var(--danger); font-weight: 600;">R$ 67</span></td>                                    <div class="preview-card text-center">
+
+                            <td><i class="fas fa-times text-danger"></i> Limitada</td>                                        <div class="metric-icon text-success" style="font-size: 2.5rem;">
+
+                            <td><i class="fas fa-times text-danger"></i> Antiga</td>                                            <i class="fas fa-arrow-up"></i>
+
+                        </tr>                                        </div>
+
+                        <tr>                                        <h4 class="text-gradient mb-0">R$ 25.450</h4>
+
+                            <td><strong>Finansys</strong></td>                                        <small class="text-muted">Receitas do Mês</small>
+
+                            <td><span style="color: var(--warning); font-weight: 600;">R$ 45</span></td>                                    </div>
+
+                            <td><i class="fas fa-times text-danger"></i> Sem IA</td>                                </div>
+
+                            <td><i class="fas fa-minus text-warning"></i> Básica</td>                                <div class="col-12 col-md-4 mb-3">
+
+                        </tr>                                    <div class="preview-card text-center">
+
+                        <tr class="highlight-row">                                        <div class="metric-icon" style="font-size: 2.5rem; color: #667eea;">
+
+                            <td><strong style="color: var(--primary);">CashFlow Manager</strong></td>                                            <i class="fas fa-brain"></i>
+
+                            <td><strong style="color: var(--success); font-size: 1.2rem;">R$ 59,90</strong></td>                                        </div>
+
+                            <td><i class="fas fa-check text-success"></i> <strong>IA Completa</strong></td>                                        <h4 class="text-gradient mb-0">94/100</h4>
+
+                            <td><i class="fas fa-check text-success"></i> <strong>Premium</strong></td>                                        <small class="text-muted">Score de IA</small>
+
+                        </tr>                                    </div>
+
+                    </tbody>                                </div>
+
+                </table>                                <div class="col-12 col-md-4 mb-3">
+
+            </div>                                    <div class="preview-card text-center">
+
+        </div>                                        <div class="metric-icon text-warning" style="font-size: 2.5rem;">
+
+    </section>                                            <i class="fas fa-exclamation-triangle"></i>
+
+                                        </div>
+
+    <!-- ROI Section -->                                        <h4 class="text-gradient mb-0">3</h4>
+
+    <section class="roi-section">                                        <small class="text-muted">Alertas IA</small>
+
+        <div class="container">                                    </div>
+
+            <div class="row justify-content-center">                                </div>
+
+                <div class="col-lg-8">                            </div>
+
+                    <h2 class="text-center mb-4" style="color: white; font-size: 2.5rem; font-weight: 700;">ROI Comprovado para MEIs</h2>                            <div class="mt-3">
+
+                                                    <div class="preview-card">
+
+                    <div class="roi-card">                                    <div class="d-flex justify-content-between align-items-center">
+
+                        <div class="roi-item">                                        <span class="text-muted">Análise Inteligente</span>
+
+                            <span>Economia de Tempo (10-15h/mês)</span>                                        <span class="badge bg-success">Saúde Excelente</span>
+
+                            <strong>R$ 500-750</strong>                                    </div>
+
+                        </div>                                    <div class="progress mt-2" style="height: 6px;">
+
+                        <div class="roi-item">                                        <div class="progress-bar" style="width: 94%; background: linear-gradient(90deg, #28a745 0%, #20c997 100%);"></div>
+
+                            <span>Decisões Melhores (evita perdas)</span>                                    </div>
+
+                            <strong>R$ 1.000-5.000</strong>                                </div>
+
+                        </div>                            </div>
+
+                        <div class="roi-item">                        </div>
+
+                            <span>Eficiência Operacional</span>                    </div>
+
+                            <strong>R$ 300-800</strong>                </div>
+
+                        </div>            </div>
+
+                        <div class="roi-item">        </div>
+
+                            <span>Visibilidade Financeira</span>    </section>
+
+                            <strong>R$ 1.000-3.000</strong>
+
+                        </div>    <!-- Features Section -->
+
+                        <div class="roi-item">    <section id="features" class="section-padding bg-light">
+
+                            <span>RETORNO TOTAL MENSAL</span>        <div class="container">
+
+                            <strong style="color: #fbbf24; font-size: 1.5rem;">R$ 2.800-9.550</strong>            <h2 class="section-title">
+
+                        </div>                🎯 Funcionalidades Premium que Justificam o Valor
+
+                    </div>            </h2>
+
+                                
+
+                    <div class="text-center mt-4">            <div class="row">
+
+                        <p style="font-size: 1.2rem; opacity: 0.9;">                <div class="col-lg-4 col-md-6">
+
+                            <strong>Investimento:</strong> R$ 59,90/mês &nbsp;|&nbsp;                     <div class="feature-card animate-fade-in">
+
+                            <strong style="color: #fbbf24;">ROI: 4.700-16.000%</strong>                        <div class="feature-icon">
+
+                        </p>                            <i class="fas fa-brain"></i>
+
+                    </div>                        </div>
+
+                </div>                        <h3 class="feature-title">🧠 Inteligência Artificial Financeira</h3>
+
+            </div>                        <p class="feature-description">
+
+        </div>                            Score de saúde financeira, detecção automática de anomalias, alertas preventivos inteligentes e previsões baseadas em Machine Learning.
+
+    </section>                        </p>
+
+                        <small class="text-success fw-bold">Valor de mercado: R$ 150-300/mês</small>
+
+    <!-- CTA Section -->                    </div>
+
+    <section class="cta-section" id="planos">                </div>
+
         <div class="container">
-            <h2 class="section-title">📊 Análise Competitiva</h2>
-            
-            <div class="row justify-content-center">
+
+            <div class="cta-content">                <div class="col-lg-4 col-md-6">
+
+                <h2 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 1.5rem;">Ideal para seu MEI crescer</h2>                    <div class="feature-card animate-fade-in">
+
+                <p class="lead" style="color: var(--text-light); margin-bottom: 2rem;">                        <div class="feature-icon">
+
+                    Junte-se aos MEIs que já economizam tempo e dinheiro com decisões financeiras inteligentes. Tenha o controle total das suas finanças.                            <i class="fas fa-chart-line"></i>
+
+                </p>                        </div>
+
+                                        <h3 class="feature-title">📊 Relatórios Executivos Profissionais</h3>
+
+                <div style="background: var(--secondary); border-radius: 20px; padding: 2rem; margin-bottom: 2rem;">                        <p class="feature-description">
+
+                    <div class="row align-items-center">                            Exportação PDF completa, planilhas Excel avançadas, gráficos interativos e dashboard em tempo real com métricas dinâmicas.
+
+                        <div class="col-md-8 text-start">                        </p>
+
+                            <h3 style="color: var(--primary); margin-bottom: 0.5rem;">Plano MEI Completo</h3>                        <small class="text-success fw-bold">Valor de mercado: R$ 80-150/mês</small>
+
+                            <p style="margin-bottom: 0; color: var(--text-light);">Acesso total a todos os recursos de IA, relatórios e automação pensados para MEIs</p>                    </div>
+
+                        </div>                </div>
+
+                        <div class="col-md-4 text-end">
+
+                            <div style="font-size: 2rem; font-weight: 700; color: var(--primary);">R$ 59,90<span style="font-size: 1rem; opacity: 0.7;">/mês</span></div>                <div class="col-lg-4 col-md-6">
+
+                        </div>                    <div class="feature-card animate-fade-in">
+
+                    </div>                        <div class="feature-icon">
+
+                </div>                            <i class="fas fa-building"></i>
+
+                                        </div>
+
+                <a href="{% url 'accounts:register' %}" class="btn btn-hero" style="background: var(--gradient); color: white; margin-right: 1rem;">                        <h3 class="feature-title">🏢 Gestão Multi-Empresa</h3>
+
+                    <i class="fas fa-rocket me-2"></i>Criar Conta Grátis                        <p class="feature-description">
+
+                </a>                            Suporte a múltiplas empresas, controle de acesso granular, dados isolados e seguros com troca rápida entre empresas.
+
+                                        </p>
+
+                <a href="{% url 'accounts:login' %}" class="btn btn-secondary-hero" style="color: var(--primary); border: 2px solid var(--primary); background: transparent;">                        <small class="text-success fw-bold">Valor de mercado: R$ 100-200/mês</small>
+
+                    <i class="fas fa-sign-in-alt me-2"></i>Já tenho conta                    </div>
+
+                </a>                </div>
+
+                
+
+                <div class="mt-4" style="color: var(--text-light); font-size: 0.9rem;">                <div class="col-lg-4 col-md-6">
+
+                    <i class="fas fa-shield-alt me-2"></i>30 dias de garantia                    <div class="feature-card animate-fade-in">
+
+                    &nbsp;&nbsp;&nbsp;                        <div class="feature-icon">
+
+                    <i class="fas fa-credit-card me-2"></i>Cancele a qualquer momento                            <i class="fas fa-shield-alt"></i>
+
+                </div>                        </div>
+
+            </div>                        <h3 class="feature-title">🔒 Segurança e Confiabilidade</h3>
+
+        </div>                        <p class="feature-description">
+
+    </section>                            Autenticação dupla, backend customizado de segurança, validação robusta e arquitetura Django profissional.
+
+                        </p>
+
+    <!-- Footer -->                        <small class="text-success fw-bold">Valor de mercado: R$ 50-100/mês</small>
+
+    <footer class="footer">                    </div>
+
+        <div class="container">                </div>
+
+            <p class="mb-0">&copy; 2025 CashFlow Manager. Transformando a gestão financeira de MEIs.</p>
+
+        </div>                <div class="col-lg-4 col-md-6">
+
+    </footer>                    <div class="feature-card animate-fade-in">
+
+                        <div class="feature-icon">
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>                            <i class="fas fa-palette"></i>
+
+    <script>                        </div>
+
+        // Smooth scrolling                        <h3 class="feature-title">💎 Interface Premium</h3>
+
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {                        <p class="feature-description">
+
+            anchor.addEventListener('click', function (e) {                            Design responsivo moderno, UX otimizada, cores e temas customizáveis com interface intuitiva que reduz tempo de aprendizado.
+
+                e.preventDefault();                        </p>
+
+                document.querySelector(this.getAttribute('href')).scrollIntoView({                        <small class="text-success fw-bold">Valor de mercado: R$ 60-120/mês</small>
+
+                    behavior: 'smooth'                    </div>
+
+                });                </div>
+
+            });
+
+        });                <div class="col-lg-4 col-md-6">
+
+                            <div class="feature-card animate-fade-in">
+
+        // Animation on scroll                        <div class="feature-icon">
+
+        const observerOptions = {                            <i class="fas fa-robot"></i>
+
+            threshold: 0.1,                        </div>
+
+            rootMargin: '0px 0px -50px 0px'                        <h3 class="feature-title">🚀 Automação Inteligente</h3>
+
+        };                        <p class="feature-description">
+
+                                    Cálculo automático de saldos, categorização inteligente, recorrência de transações e alertas automáticos de risco.
+
+        const observer = new IntersectionObserver((entries) => {                        </p>
+
+            entries.forEach(entry => {                        <small class="text-success fw-bold">Valor de mercado: R$ 80-160/mês</small>
+
+                if (entry.isIntersecting) {                    </div>
+
+                    entry.target.classList.add('animate-fade-in');                </div>
+
+                }            </div>
+
+            });        </div>
+
+        }, observerOptions);    </section>
+
+        
+
+        document.querySelectorAll('.feature-card, .stat-card').forEach(el => {    <!-- Competitive Analysis -->
+
+            observer.observe(el);    <section class="section-padding">
+
+        });        <div class="container">
+
+    </script>            <h2 class="section-title">📊 Análise Competitiva</h2>
+
+</body>            
+
+</html>            <div class="row justify-content-center">
                 <div class="col-lg-10">
                     <div class="pricing-table">
                         <div class="pricing-header">

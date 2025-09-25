@@ -10,6 +10,7 @@ from io import BytesIO
 
 from transactions.models import Transaction, Account, Category
 from .models import Alert
+from .dasn_simei import generate_dasn_simei_report
 
 
 @login_required
@@ -214,7 +215,7 @@ def reports_overview(request):
     
     # Dados básicos para dashboard de relatórios
     context = {
-        'total_transactions': Transaction.objects.filter(account__company=current_company).count(),
+        'total_transactions': Transaction.objects.filter(company=current_company).count(),
         'total_categories': Category.objects.filter(company=current_company).count(),
         'total_accounts': Account.objects.filter(company=current_company).count(),
     }
@@ -241,13 +242,13 @@ def financial_report(request):
     
     # Filtrar transações
     transactions = Transaction.objects.filter(
-        account__company=current_company,
-        date__range=[start_date, end_date]
+        company=current_company,
+        transaction_date__range=[start_date, end_date]
     )
     
     # Receitas e despesas
-    income = transactions.filter(type='income').aggregate(total=Sum('amount'))['total'] or Decimal('0')
-    expense = transactions.filter(type='expense').aggregate(total=Sum('amount'))['total'] or Decimal('0')
+    income = transactions.filter(transaction_type='income').aggregate(total=Sum('amount'))['total'] or Decimal('0')
+    expense = transactions.filter(transaction_type='expense').aggregate(total=Sum('amount'))['total'] or Decimal('0')
     
     # Por categoria
     category_data = {}
@@ -255,7 +256,7 @@ def financial_report(request):
         cat_name = transaction.category.name if transaction.category else 'Sem categoria'
         if cat_name not in category_data:
             category_data[cat_name] = {'income': Decimal('0'), 'expense': Decimal('0')}
-        category_data[cat_name][transaction.type] += transaction.amount
+        category_data[cat_name][transaction.transaction_type] += transaction.amount
     
     context = {
         'start_date': start_date,
@@ -263,7 +264,7 @@ def financial_report(request):
         'income': income,
         'expense': expense,
         'net': income - expense,
-        'transactions': transactions.order_by('-date')[:50],  # Últimas 50
+        'transactions': transactions.order_by('-transaction_date')[:50],  # Últimas 50
         'category_data': category_data,
     }
     
@@ -288,13 +289,13 @@ def cash_flow_report(request):
         next_month = (current_date.replace(day=28) + timedelta(days=4)).replace(day=1)
         
         transactions = Transaction.objects.filter(
-            account__company=current_company,
-            date__gte=current_date,
-            date__lt=next_month
+            company=current_company,
+            transaction_date__gte=current_date,
+            transaction_date__lt=next_month
         )
         
-        income = transactions.filter(type='income').aggregate(total=Sum('amount'))['total'] or Decimal('0')
-        expense = transactions.filter(type='expense').aggregate(total=Sum('amount'))['total'] or Decimal('0')
+        income = transactions.filter(transaction_type='income').aggregate(total=Sum('amount'))['total'] or Decimal('0')
+        expense = transactions.filter(transaction_type='expense').aggregate(total=Sum('amount'))['total'] or Decimal('0')
         
         monthly_data.append({
             'month': current_date.strftime('%b %Y'),
@@ -334,13 +335,13 @@ def api_chart_data(request):
             next_month = (current_date.replace(day=28) + timedelta(days=4)).replace(day=1)
             
             transactions = Transaction.objects.filter(
-                account__company=current_company,
-                date__gte=current_date,
-                date__lt=next_month
+                company=current_company,
+                transaction_date__gte=current_date,
+                transaction_date__lt=next_month
             )
             
-            income = transactions.filter(type='income').aggregate(total=Sum('amount'))['total'] or Decimal('0')
-            expense = transactions.filter(type='expense').aggregate(total=Sum('amount'))['total'] or Decimal('0')
+            income = transactions.filter(transaction_type='income').aggregate(total=Sum('amount'))['total'] or Decimal('0')
+            expense = transactions.filter(transaction_type='expense').aggregate(total=Sum('amount'))['total'] or Decimal('0')
             
             data.append({
                 'month': current_date.strftime('%b'),
@@ -359,8 +360,8 @@ def api_chart_data(request):
         
         categories = {}
         transactions = Transaction.objects.filter(
-            account__company=current_company,
-            date__range=[start_date, end_date]
+            company=current_company,
+            transaction_date__range=[start_date, end_date]
         )
         
         for transaction in transactions:
@@ -373,3 +374,57 @@ def api_chart_data(request):
         return JsonResponse({'data': data})
     
     return JsonResponse({'error': 'Tipo de gráfico inválido'}, status=400)
+
+
+@login_required
+def dasn_simei_report_view(request):
+    """Gerar relatório DASN-SIMEI para MEI"""
+    current_company = request.user.companies.first()
+    if not current_company:
+        return redirect('accounts:company_setup')
+    
+    # Ano da declaração (padrão: ano anterior)
+    year = request.GET.get('year')
+    if year:
+        try:
+            year = int(year)
+        except (ValueError, TypeError):
+            year = None
+    
+    if request.method == 'POST':
+        # Gerar PDF do relatório
+        try:
+            pdf_buffer = generate_dasn_simei_report(current_company, year)
+            
+            # Preparar resposta HTTP
+            response = HttpResponse(pdf_buffer.getvalue(), content_type='application/pdf')
+            year_label = year or (timezone.now().year - 1)
+            filename = f'DASN-SIMEI_{current_company.name.replace(" ", "_")}_{year_label}.pdf'
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+            
+            return response
+            
+        except Exception as e:
+            # Em caso de erro, redirecionar com mensagem
+            from django.contrib import messages
+            messages.error(request, f'Erro ao gerar relatório DASN-SIMEI: {str(e)}')
+            return redirect('reports:dasn_simei')
+    
+    # GET: Mostrar formulário
+    current_year = timezone.now().year
+    available_years = list(range(current_year - 5, current_year))  # Últimos 5 anos
+    default_year = year or (current_year - 1)
+    
+    # Verificar se há transações para o ano selecionado
+    transactions_exist = Transaction.objects.filter(
+        company=current_company,
+        transaction_date__year=default_year
+    ).exists()
+    
+    context = {
+        'available_years': available_years,
+        'selected_year': default_year,
+        'transactions_exist': transactions_exist,
+    }
+    
+    return render(request, 'reports/dasn_simei.html', context)

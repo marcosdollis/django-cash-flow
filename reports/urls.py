@@ -22,4 +22,13 @@ urlpatterns = [
     path('alerts/', views.alert_list_view, name='alert_list'),
     path('alerts/<int:pk>/acknowledge/', views.alert_acknowledge_view, name='alert_acknowledge'),
     path('alerts/<int:pk>/resolve/', views.alert_resolve_view, name='alert_resolve'),
+    
+    # Relatórios específicos
+    path('overview/', views.reports_overview, name='overview'),
+    path('financial/', views.financial_report, name='financial'),
+    path('cash-flow/', views.cash_flow_report, name='cash_flow'),
+    path('dasn-simei/', views.dasn_simei_report_view, name='dasn_simei'),
+    
+    # API
+    path('api/chart-data/', views.api_chart_data, name='api_chart_data'),
 ]

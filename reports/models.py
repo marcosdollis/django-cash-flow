@@ -16,6 +16,7 @@ class Report(models.Model):
         ('category_analysis', 'Análise por Categoria'),
         ('trends', 'Análise de Tendências'),
         ('goals_progress', 'Progresso de Metas'),
+        ('dasn_simei', 'DASN-SIMEI (Declaração Anual MEI)'),
         ('custom', 'Personalizado'),
     ]
     

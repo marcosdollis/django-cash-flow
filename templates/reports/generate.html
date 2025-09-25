@@ -1,15 +1,347 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Gerar Relatório - CashFlow Manager{% endblock %}
 
+{% block extra_css %}
+<style>
+.report-type-card {
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.report-type-card:hover, .report-type-card.selected {
+    border-color: #3b82f6;
+    background: linear-gradient(135deg, #f0f9ff 0%, #ffffff 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.report-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin-bottom: 12px;
+    transition: all 0.3s ease;
+}
+
+.report-icon.financial {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+}
+
+.report-icon.cash-flow {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+}
+
+.report-icon.categories {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    color: white;
+}
+
+.report-icon.dasn-simei {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+}
+
+.format-option {
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 15px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.format-option:hover, .format-option.selected {
+    border-color: #3b82f6;
+    background: #f0f9ff;
+}
+
+.generate-btn {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    border: none;
+    border-radius: 10px;
+    padding: 15px 30px;
+    font-weight: 600;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.generate-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);
+    color: white;
+}
+
+.tips-card {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border-radius: 12px;
+    padding: 20px;
+    border-left: 4px solid #3b82f6;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid">
-    <div class="card">
-        <div class="card-header">
-            <h4 class="mb-0">
-                <i class="fas fa-chart-bar me-2"></i>Gerar Relatório
-            </h4>
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-1">Gerar Relatório</h1>
+                    <p class="text-muted mb-0">Configure e exporte relatórios personalizados</p>
+                </div>
+                <a href="{% url 'reports:overview' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar
+                </a>
+            </div>
+
+            <div class="row">
+                <!-- Formulário de Geração -->
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-cog me-2"></i>Configuração do Relatório
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="get" action="{% url 'core:export_financial_report' %}" id="reportForm">
+                                <!-- Tipo de Relatório -->
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold">Tipo de Relatório</label>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <div class="report-type-card h-100 p-3" onclick="selectReportType('financial')">
+                                                <input type="radio" name="type" value="financial" id="financial" class="d-none" checked>
+                                                <div class="report-icon financial mx-auto">
+                                                    <i class="fas fa-chart-line"></i>
+                                                </div>
+                                                <h6 class="fw-bold">Relatório Financeiro</h6>
+                                                <small class="text-muted">Receitas, despesas e resultado líquido detalhado por período</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <div class="report-type-card h-100 p-3" onclick="selectReportType('cash_flow')">
+                                                <input type="radio" name="type" value="cash_flow" id="cash_flow" class="d-none">
+                                                <div class="report-icon cash-flow mx-auto">
+                                                    <i class="fas fa-money-bill-wave"></i>
+                                                </div>
+                                                <h6 class="fw-bold">Fluxo de Caixa</h6>
+                                                <small class="text-muted">Movimentação de entrada e saída com evolução temporal</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <div class="report-type-card h-100 p-3" onclick="selectReportType('categories')">
+                                                <input type="radio" name="type" value="categories" id="categories" class="d-none">
+                                                <div class="report-icon categories mx-auto">
+                                                    <i class="fas fa-chart-pie"></i>
+                                                </div>
+                                                <h6 class="fw-bold">Por Categoria</h6>
+                                                <small class="text-muted">Análise detalhada de gastos e receitas por categoria</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <div class="report-type-card h-100 p-3" onclick="goToDasnSimei()">
+                                                <div class="report-icon dasn-simei mx-auto">
+                                                    <i class="fas fa-file-invoice"></i>
+                                                </div>
+                                                <h6 class="fw-bold">DASN-SIMEI</h6>
+                                                <small class="text-muted">Relatório específico para declaração anual MEI</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Período -->
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Data Inicial</label>
+                                        <input type="date" class="form-control" name="start_date" id="start_date" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Data Final</label>
+                                        <input type="date" class="form-control" name="end_date" id="end_date" required>
+                                    </div>
+                                </div>
+
+                                <!-- Formato de Exportação -->
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold">Formato de Exportação</label>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="format-option selected" onclick="selectFormat('pdf')">
+                                                <input type="radio" name="format" value="pdf" id="pdf" class="d-none" checked>
+                                                <i class="fas fa-file-pdf fa-2x text-danger mb-2"></i>
+                                                <div class="fw-bold">PDF</div>
+                                                <small class="text-muted">Ideal para arquivo e impressão</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="format-option" onclick="selectFormat('excel')">
+                                                <input type="radio" name="format" value="excel" id="excel" class="d-none">
+                                                <i class="fas fa-file-excel fa-2x text-success mb-2"></i>
+                                                <div class="fw-bold">Excel</div>
+                                                <small class="text-muted">Para análises adicionais</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="format-option" onclick="selectFormat('online')">
+                                                <input type="radio" name="format" value="online" id="online" class="d-none">
+                                                <i class="fas fa-globe fa-2x text-primary mb-2"></i>
+                                                <div class="fw-bold">Visualizar</div>
+                                                <small class="text-muted">Ver na tela do navegador</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Título Personalizado -->
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold">Título do Relatório (Opcional)</label>
+                                    <input type="text" class="form-control" name="title" placeholder="Ex: Relatório Mensal - Setembro 2024">
+                                </div>
+
+                                <!-- Botões -->
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn generate-btn">
+                                        <i class="fas fa-download me-2"></i>Gerar e Baixar Relatório
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="fillDefaultDates()">
+                                        <i class="fas fa-calendar me-2"></i>Usar Último Mês
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dicas e Informações -->
+                <div class="col-lg-4">
+                    <div class="tips-card mb-4">
+                        <h6 class="fw-bold text-primary mb-3">
+                            <i class="fas fa-lightbulb me-2"></i>Dicas para Relatórios
+                        </h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                <strong>PDF:</strong> Melhor para arquivamento e apresentações
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                <strong>Excel:</strong> Permite análises personalizadas
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                <strong>Períodos:</strong> Use 30-90 dias para análises mensais
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                <strong>Categorias:</strong> Ideal para identificar gastos excessivos
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-info-circle me-2"></i>Formatos Disponíveis
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <h6 class="text-danger">
+                                    <i class="fas fa-file-pdf me-1"></i>PDF
+                                </h6>
+                                <small class="text-muted">
+                                    Relatório profissional com gráficos e tabelas formatadas. 
+                                    Ideal para apresentar para bancos e investidores.
+                                </small>
+                            </div>
+                            <div class="mb-3">
+                                <h6 class="text-success">
+                                    <i class="fas fa-file-excel me-1"></i>Excel
+                                </h6>
+                                <small class="text-muted">
+                                    Planilha editável com dados brutos para análises personalizadas 
+                                    e criação de seus próprios gráficos.
+                                </small>
+                            </div>
+                            <div>
+                                <h6 class="text-primary">
+                                    <i class="fas fa-globe me-1"></i>Visualizar Online
+                                </h6>
+                                <small class="text-muted">
+                                    Visualização rápida no navegador com gráficos interativos 
+                                    antes de decidir o formato de exportação.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
+    </div>
+</div>
+
+<script>
+function selectReportType(type) {
+    // Remove selected class from all cards
+    document.querySelectorAll('.report-type-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    
+    // Add selected class to clicked card
+    event.currentTarget.classList.add('selected');
+    
+    // Check the radio button
+    document.getElementById(type).checked = true;
+}
+
+function selectFormat(format) {
+    // Remove selected class from all format options
+    document.querySelectorAll('.format-option').forEach(option => {
+        option.classList.remove('selected');
+    });
+    
+    // Add selected class to clicked option
+    event.currentTarget.classList.add('selected');
+    
+    // Check the radio button
+    document.getElementById(format).checked = true;
+}
+
+function fillDefaultDates() {
+    const today = new Date();
+    const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    const endOfLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+    
+    document.getElementById('start_date').value = lastMonth.toISOString().split('T')[0];
+    document.getElementById('end_date').value = endOfLastMonth.toISOString().split('T')[0];
+}
+
+function goToDasnSimei() {
+    window.location.href = "{% url 'reports:dasn_simei' %}";
+}
+
+// Initialize with current month
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    
+    document.getElementById('start_date').value = firstDay.toISOString().split('T')[0];
+    document.getElementById('end_date').value = today.toISOString().split('T')[0];
+});
+</script>
+
         <div class="card-body">
             <form method="get" action="{% url 'core:export_financial_report' %}">
                 <div class="row">

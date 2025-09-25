@@ -56,10 +56,26 @@
                             <i class="fas fa-chart-bar me-1"></i>Relatórios
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{% url 'reports:list' %}">Relatórios</a></li>
-                            <li><a class="dropdown-item" href="{% url 'reports:generate' %}">Gerar Relatório</a></li>
+                            <li><a class="dropdown-item" href="{% url 'reports:overview' %}">
+                                <i class="fas fa-chart-line me-2"></i>Visão Geral
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'reports:generate' %}">
+                                <i class="fas fa-plus-circle me-2 text-primary"></i>Gerar Relatório
+                            </a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{% url 'reports:forecast_list' %}">Previsões</a></li>
+                            <li><a class="dropdown-item" href="{% url 'reports:financial' %}">
+                                <i class="fas fa-chart-bar me-2"></i>Relatório Financeiro
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'reports:cash_flow' %}">
+                                <i class="fas fa-money-bill-wave me-2"></i>Fluxo de Caixa
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'reports:dasn_simei' %}">
+                                <i class="fas fa-file-invoice me-2 text-warning"></i>DASN-SIMEI (MEI)
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'reports:alert_list' %}">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Alertas
+                            </a></li>
                         </ul>
                     </li>
                     <li class="nav-item">
