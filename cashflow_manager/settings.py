@@ -31,6 +31,21 @@ RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
+# Railway.app settings
+RAILWAY_STATIC_URL = os.environ.get('RAILWAY_STATIC_URL')
+RAILWAY_PUBLIC_DOMAIN = os.environ.get('RAILWAY_PUBLIC_DOMAIN')
+if RAILWAY_PUBLIC_DOMAIN:
+    ALLOWED_HOSTS.append(RAILWAY_PUBLIC_DOMAIN)
+
+# Permitir domínios .railway.app
+if any('.railway.app' in host for host in os.environ.get('ALLOWED_HOSTS', '').split(',')):
+    ALLOWED_HOSTS.extend([host for host in os.environ.get('ALLOWED_HOSTS', '').split(',') if host])
+
+# Adicionar domínio Railway automático
+RAILWAY_ENVIRONMENT = os.environ.get('RAILWAY_ENVIRONMENT')
+if RAILWAY_ENVIRONMENT:
+    ALLOWED_HOSTS.append('*.railway.app')
+
 
 # Application definition
 
@@ -96,10 +111,10 @@ WSGI_APPLICATION = 'cashflow_manager.wsgi.application'
 DATABASE_URL = config('DATABASE_URL', default=None)
 
 if DATABASE_URL:
-    # Produção - PostgreSQL no Render
+    # Produção - PostgreSQL no Render/Railway
     import dj_database_url
     DATABASES = {
-        'default': dj_database_url.parse(DATABASE_URL)
+        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600, ssl_require=False)
     }
 else:
     # Desenvolvimento - SQLite local

@@ -1,0 +1,45 @@
+{
+  "name": "Django CashFlow Manager",
+  "description": "Sistema completo de gestão financeira para MEIs com IA",
+  "repository": "https://github.com/marcosdollis/django-cash-flow",
+  "services": [
+    {
+      "name": "web",
+      "type": "web",
+      "runtime": "python",
+      "buildCommand": "pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate --noinput",
+      "startCommand": "gunicorn cashflow_manager.wsgi:application --bind 0.0.0.0:$PORT --workers 4",
+      "healthcheckPath": "/",
+      "healthcheckTimeout": 100,
+      "envVars": {
+        "DEBUG": {
+          "description": "Django debug mode",
+          "default": "False"
+        },
+        "SECRET_KEY": {
+          "description": "Django secret key",
+          "generate": true
+        },
+        "ALLOWED_HOSTS": {
+          "description": "Allowed hosts for Django",
+          "default": "*.railway.app"
+        },
+        "WEB_CONCURRENCY": {
+          "description": "Number of gunicorn workers",
+          "default": "4"
+        },
+        "PYTHONUNBUFFERED": {
+          "description": "Python unbuffered output",
+          "default": "1"
+        }
+      }
+    }
+  ],
+  "databases": [
+    {
+      "name": "postgres",
+      "type": "postgresql",
+      "plan": "hobby"
+    }
+  ]
+}
