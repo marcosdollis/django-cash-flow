@@ -9,7 +9,7 @@ python -m pip install --upgrade pip
 
 # Instalar dependências
 echo "📦 Installing dependencies..."
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 
 # Coletar arquivos estáticos
 echo "📁 Collecting static files..."

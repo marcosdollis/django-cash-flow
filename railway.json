@@ -2,7 +2,7 @@
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
     "builder": "NIXPACKS",
-    "buildCommand": "pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate --noinput"
+    "buildCommand": "python -m pip install --upgrade pip && python -m pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate --noinput"
   },
   "deploy": {
     "startCommand": "gunicorn cashflow_manager.wsgi:application --bind 0.0.0.0:$PORT --workers 4",
