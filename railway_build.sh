@@ -5,11 +5,11 @@ echo "🚀 Starting Railway deployment..."
 
 # Atualizar pip
 echo "📦 Updating pip..."
-python -m pip install --upgrade pip
+pip install --upgrade pip
 
 # Instalar dependências
 echo "📦 Installing dependencies..."
-python -m pip install -r requirements.txt
+pip install -r requirements.txt
 
 # Coletar arquivos estáticos
 echo "📁 Collecting static files..."
