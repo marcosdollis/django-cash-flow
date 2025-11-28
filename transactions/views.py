@@ -3,6 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q
 from django.core.paginator import Paginator
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 from .models import Transaction, Category, Account, Goal
 from .forms import TransactionForm, CategoryForm, AccountForm, GoalForm
 
@@ -142,6 +144,45 @@ def transaction_update_status_view(request, uuid):
             messages.error(request, 'Status inválido!')
     
     return redirect('transactions:detail', uuid=transaction.uuid)
+
+
+@login_required
+@require_POST
+def transaction_bulk_update_status_view(request):
+    """Atualizar status de múltiplas transações de uma vez"""
+    current_company = request.user.companies.first()
+    if not current_company:
+        return JsonResponse({'success': False, 'error': 'Empresa não encontrada'}, status=400)
+    
+    transaction_ids = request.POST.getlist('transaction_ids[]')
+    new_status = request.POST.get('status')
+    
+    if not transaction_ids:
+        messages.error(request, 'Nenhuma transação foi selecionada!')
+        return redirect('transactions:list')
+    
+    if new_status not in ['pending', 'completed', 'cancelled']:
+        messages.error(request, 'Status inválido!')
+        return redirect('transactions:list')
+    
+    # Atualiza todas as transações selecionadas
+    updated_count = Transaction.objects.filter(
+        uuid__in=transaction_ids,
+        company=current_company
+    ).update(status=new_status)
+    
+    status_labels = {
+        'pending': 'Pendente',
+        'completed': 'Concluída',
+        'cancelled': 'Cancelada'
+    }
+    
+    messages.success(
+        request,
+        f'{updated_count} transação(ões) marcada(s) como "{status_labels.get(new_status)}"!'
+    )
+    
+    return redirect('transactions:list')
 
 
 # Views de Categorias

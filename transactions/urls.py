@@ -12,6 +12,7 @@ urlpatterns = [
     path('<uuid:uuid>/edit/', views.transaction_update_view, name='update'),
     path('<uuid:uuid>/status/', views.transaction_update_status_view, name='update_status'),
     path('<uuid:uuid>/delete/', views.transaction_delete_view, name='delete'),
+    path('bulk/status/', views.transaction_bulk_update_status_view, name='bulk_update_status'),
     
     # Categorias
     path('categories/', views.category_list_view, name='category_list'),
