@@ -102,6 +102,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'accounts.context_processors.company_context',
+                'core.context_processors.vapid_public_key',
             ],
         },
     },
@@ -244,3 +245,9 @@ AUTHENTICATION_BACKENDS = [
     'accounts.backends.EmailOrUsernameModelBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
+
+# ==================== PUSH NOTIFICATIONS ====================
+# VAPID keys para Web Push
+VAPID_PRIVATE_KEY = config('VAPID_PRIVATE_KEY', default=None)
+VAPID_PUBLIC_KEY = config('VAPID_PUBLIC_KEY', default=None)
+VAPID_ADMIN_EMAIL = config('VAPID_ADMIN_EMAIL', default='admin@cashflow.com')

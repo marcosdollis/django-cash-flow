@@ -42,7 +42,39 @@ def generate_dynamic_alerts(company, user=None):
     # 5. Verificar fluxo de caixa
     alerts_created.extend(_check_cash_flow_risks(company, user))
     
+    # 6. Enviar notificações push para novos alertas críticos
+    _send_push_for_critical_alerts(alerts_created)
+    
     return alerts_created
+
+
+def _send_push_for_critical_alerts(alerts):
+    """Envia notificações push para alertas críticos"""
+    from api.views import send_push_notification
+    
+    for alert in alerts:
+        # Só envia push para alertas de alta severidade
+        if alert.severity in ['critical', 'high']:
+            try:
+                # Determina ícone baseado no tipo
+                icon_map = {
+                    'low_balance': '⚠️',
+                    'overdue_transaction': '⏰',
+                    'goal_deadline': '🎯',
+                    'anomaly': '📊',
+                    'cash_flow': '💰',
+                }
+                icon = icon_map.get(alert.alert_type, '🔔')
+                
+                # Envia notificação push
+                send_push_notification(
+                    user=alert.user,
+                    title=f"{icon} {alert.title}",
+                    body=alert.message[:150],  # Limita tamanho
+                    url=f'/reports/alerts/{alert.id}/',
+                )
+            except Exception as e:
+                print(f"Erro ao enviar push para alerta {alert.id}: {e}")
 
 
 def _check_low_balance_alerts(company, user):
