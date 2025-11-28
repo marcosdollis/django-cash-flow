@@ -31,20 +31,26 @@ RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
-# Railway.app settings
-RAILWAY_STATIC_URL = os.environ.get('RAILWAY_STATIC_URL')
+# Railway.app settings - adiciona domínio automaticamente
 RAILWAY_PUBLIC_DOMAIN = os.environ.get('RAILWAY_PUBLIC_DOMAIN')
 if RAILWAY_PUBLIC_DOMAIN:
     ALLOWED_HOSTS.append(RAILWAY_PUBLIC_DOMAIN)
 
-# Permitir domínios .railway.app
-if any('.railway.app' in host for host in os.environ.get('ALLOWED_HOSTS', '').split(',')):
-    ALLOWED_HOSTS.extend([host for host in os.environ.get('ALLOWED_HOSTS', '').split(',') if host])
+# Detecta automaticamente domínios Railway
+if os.environ.get('RAILWAY_ENVIRONMENT'):
+    # Permite todos os domínios railway.app
+    ALLOWED_HOSTS.append('.railway.app')
+    ALLOWED_HOSTS.append('*.up.railway.app')
 
-# Adicionar domínio Railway automático
-RAILWAY_ENVIRONMENT = os.environ.get('RAILWAY_ENVIRONMENT')
-if RAILWAY_ENVIRONMENT:
-    ALLOWED_HOSTS.append('*.railway.app')
+# CSRF Trusted Origins para Railway e Render
+CSRF_TRUSTED_ORIGINS = []
+if RENDER_EXTERNAL_HOSTNAME:
+    CSRF_TRUSTED_ORIGINS.append(f'https://{RENDER_EXTERNAL_HOSTNAME}')
+if RAILWAY_PUBLIC_DOMAIN:
+    CSRF_TRUSTED_ORIGINS.append(f'https://{RAILWAY_PUBLIC_DOMAIN}')
+if os.environ.get('RAILWAY_ENVIRONMENT'):
+    CSRF_TRUSTED_ORIGINS.append('https://*.railway.app')
+    CSRF_TRUSTED_ORIGINS.append('https://*.up.railway.app')
 
 
 # Application definition
