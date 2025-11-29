@@ -16,13 +16,13 @@
 }
 
 .metric-icon {
-    width: 60px;
-    height: 60px;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
+    font-size: 20px;
 }
 
 .chart-container {
@@ -42,53 +42,175 @@
 .goal-progress {
     height: 8px;
 }
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+    .card-metric {
+        margin-bottom: 0.75rem;
+    }
+    
+    .card-metric .card-body {
+        padding: 0.75rem !important;
+    }
+    
+    .metric-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+        margin-right: 0.5rem !important;
+    }
+    
+    .card-metric h4 {
+        font-size: 1.1rem;
+    }
+    
+    .card-metric h6 {
+        font-size: 0.75rem;
+    }
+    
+    .chart-container {
+        height: 250px;
+    }
+    
+    /* Simplificar filtros no mobile */
+    .filter-card-mobile {
+        display: none;
+    }
+    
+    .mobile-filter-toggle {
+        display: block;
+    }
+    
+    /* Botões de ação empilhados */
+    .dashboard-actions .btn-group {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .dashboard-actions .btn {
+        margin-bottom: 0.5rem;
+        width: 100%;
+    }
+    
+    /* Tabela de transações mais compacta */
+    .transaction-table-mobile td {
+        padding: 0.5rem !important;
+        font-size: 0.85rem;
+    }
+    
+    .transaction-table-mobile .transaction-icon {
+        display: none;
+    }
+    
+    /* Cards de contas mais compactos */
+    .account-list-item {
+        padding: 0.5rem !important;
+        font-size: 0.85rem;
+    }
+    
+    /* Alertas mais compactos */
+    .alert-item {
+        padding: 0.5rem !important;
+        margin-bottom: 0.5rem;
+    }
+    
+    .alert-item small {
+        font-size: 0.75rem;
+    }
+    
+    /* Gráfico responsivo */
+    .card-header .btn-group {
+        transform: scale(0.85);
+    }
+}
+
+@media (max-width: 576px) {
+    /* Extra small devices */
+    h2 {
+        font-size: 1.5rem;
+    }
+    
+    h5 {
+        font-size: 1rem;
+    }
+    
+    .card-header h5 {
+        font-size: 0.9rem;
+    }
+    
+    .metric-value {
+        font-size: 1rem !important;
+    }
+    
+    /* Ocultar labels de período no gráfico */
+    .chart-container canvas {
+        max-height: 200px;
+    }
+}
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid">
     <!-- Header com Filtros -->
-    <div class="row mb-4">
-        <div class="col">
-            <h2 class="mb-0">
+    <div class="row mb-3">
+        <div class="col-12 col-md-6 mb-2 mb-md-0">
+            <h2 class="mb-1">
                 <i class="fas fa-tachometer-alt me-2"></i>Dashboard
             </h2>
-            <p class="text-muted">
-                Período: {{ start_date|date:"d/m/Y" }} - {{ end_date|date:"d/m/Y" }} 
-                ({{ period_days }} dias)
+            <p class="text-muted mb-0 small">
+                <span class="d-none d-md-inline">Período: </span>{{ start_date|date:"d/m/Y" }} - {{ end_date|date:"d/m/Y" }} 
+                <span class="d-none d-md-inline">({{ period_days }} dias)</span>
             </p>
         </div>
-        <div class="col-auto">
-            <div class="btn-group" role="group">
+        <div class="col-12 col-md-6 dashboard-actions">
+            <div class="btn-group d-none d-md-flex" role="group">
                 <a href="{% url 'core:insights' %}" class="btn btn-success">
-                    <i class="fas fa-brain me-1"></i>Insights IA
+                    <i class="fas fa-brain me-1"></i><span class="d-none d-lg-inline">Insights IA</span>
                     <span class="badge bg-light text-dark ms-1">Premium</span>
                 </a>
                 <a href="{% url 'transactions:create' %}" class="btn btn-primary">
-                    <i class="fas fa-plus me-1"></i>Nova Transação
+                    <i class="fas fa-plus me-1"></i><span class="d-none d-lg-inline">Nova Transação</span>
                 </a>
                 <a href="{% url 'reports:generate' %}" class="btn btn-outline-primary">
-                    <i class="fas fa-chart-bar me-1"></i>Relatório
+                    <i class="fas fa-chart-bar me-1"></i><span class="d-none d-lg-inline">Relatório</span>
                 </a>
+            </div>
+            <!-- Mobile: botões empilhados -->
+            <div class="d-md-none">
+                <a href="{% url 'transactions:create' %}" class="btn btn-primary w-100 mb-2">
+                    <i class="fas fa-plus me-1"></i>Nova Transação
+                </a>
+                <div class="btn-group w-100">
+                    <a href="{% url 'core:insights' %}" class="btn btn-sm btn-success">
+                        <i class="fas fa-brain"></i> Insights
+                    </a>
+                    <a href="{% url 'reports:generate' %}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-chart-bar"></i> Relatório
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Filtros de Data -->
-    <div class="row mb-4">
+    <div class="row mb-3">
         <div class="col">
             <div class="card">
-                <div class="card-header">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <h6 class="mb-0">
-                        <i class="fas fa-filter me-2"></i>Filtros de Período
+                        <i class="fas fa-filter me-2"></i><span class="d-none d-md-inline">Filtros de </span>Período
                     </h6>
+                    <button class="btn btn-sm btn-outline-secondary d-md-none" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
                 </div>
-                <div class="card-body py-3">
-                    <form method="get" action="{% url 'core:dashboard' %}" class="row g-3">
+                <div class="card-body py-2 py-md-3 collapse d-md-block" id="filterCollapse">
+                    <form method="get" action="{% url 'core:dashboard' %}" class="row g-2 g-md-3">
                         <!-- Períodos Pré-definidos -->
-                        <div class="col-md-3">
-                            <label class="form-label">Período Rápido:</label>
-                            <select name="period" class="form-select" onchange="this.form.submit()">
+                        <div class="col-12 col-md-3">
+                            <label class="form-label small">Período Rápido:</label>
+                            <select name="period" class="form-select form-select-sm" onchange="this.form.submit()">
                                 <option value="7" {% if current_filters.period == '7' %}selected{% endif %}>Últimos 7 dias</option>
                                 <option value="30" {% if current_filters.period == '30' %}selected{% endif %}>Últimos 30 dias</option>
                                 <option value="60" {% if current_filters.period == '60' %}selected{% endif %}>Últimos 60 dias</option>
@@ -101,27 +223,27 @@
                         </div>
 
                         <!-- Data Inicial -->
-                        <div class="col-md-3">
-                            <label class="form-label">Data Inicial:</label>
-                            <input type="date" name="start_date" class="form-control" 
+                        <div class="col-6 col-md-3">
+                            <label class="form-label small">Data Inicial:</label>
+                            <input type="date" name="start_date" class="form-control form-control-sm" 
                                    value="{{ current_filters.start_date }}">
                         </div>
 
                         <!-- Data Final -->
-                        <div class="col-md-3">
-                            <label class="form-label">Data Final:</label>
-                            <input type="date" name="end_date" class="form-control" 
+                        <div class="col-6 col-md-3">
+                            <label class="form-label small">Data Final:</label>
+                            <input type="date" name="end_date" class="form-control form-control-sm" 
                                    value="{{ current_filters.end_date }}">
                         </div>
 
                         <!-- Botões -->
-                        <div class="col-md-3 d-flex align-items-end">
+                        <div class="col-12 col-md-3 d-flex align-items-end">
                             <div class="btn-group w-100">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-search me-1"></i>Filtrar
+                                <button type="submit" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-search"></i><span class="d-none d-md-inline ms-1">Filtrar</span>
                                 </button>
-                                <a href="{% url 'core:dashboard' %}" class="btn btn-outline-secondary">
-                                    <i class="fas fa-times me-1"></i>Limpar
+                                <a href="{% url 'core:dashboard' %}" class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-times"></i><span class="d-none d-md-inline ms-1">Limpar</span>
                                 </a>
                             </div>
                         </div>
@@ -132,44 +254,44 @@
     </div>
 
     <!-- Métricas Principais -->
-    <div class="row mb-4">
-        <div class="col-md-3">
+    <div class="row mb-3">
+        <div class="col-6 col-md-3 mb-2 mb-md-0">
             <div class="card card-metric border-success h-100">
-                <div class="card-body d-flex align-items-center">
-                    <div class="metric-icon bg-success text-white me-3">
+                <div class="card-body d-flex align-items-center p-2 p-md-3">
+                    <div class="metric-icon bg-success text-white me-2 me-md-3">
                         <i class="fas fa-arrow-up"></i>
                     </div>
-                    <div>
-                        <h6 class="text-muted mb-0">Receitas</h6>
-                        <h4 class="mb-0 text-success">R$ {{ total_income|floatformat:2 }}</h4>
+                    <div class="flex-grow-1">
+                        <h6 class="text-muted mb-0 small">Receitas</h6>
+                        <h4 class="mb-0 text-success metric-value">R$ {{ total_income|floatformat:2 }}</h4>
                     </div>
                 </div>
             </div>
         </div>
         
-        <div class="col-md-3">
+        <div class="col-6 col-md-3 mb-2 mb-md-0">
             <div class="card card-metric border-danger h-100">
-                <div class="card-body d-flex align-items-center">
-                    <div class="metric-icon bg-danger text-white me-3">
+                <div class="card-body d-flex align-items-center p-2 p-md-3">
+                    <div class="metric-icon bg-danger text-white me-2 me-md-3">
                         <i class="fas fa-arrow-down"></i>
                     </div>
-                    <div>
-                        <h6 class="text-muted mb-0">Despesas</h6>
-                        <h4 class="mb-0 text-danger">R$ {{ total_expense|floatformat:2 }}</h4>
+                    <div class="flex-grow-1">
+                        <h6 class="text-muted mb-0 small">Despesas</h6>
+                        <h4 class="mb-0 text-danger metric-value">R$ {{ total_expense|floatformat:2 }}</h4>
                     </div>
                 </div>
             </div>
         </div>
         
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <div class="card card-metric border-{% if net_income >= 0 %}success{% else %}danger{% endif %} h-100">
-                <div class="card-body d-flex align-items-center">
-                    <div class="metric-icon bg-{% if net_income >= 0 %}success{% else %}danger{% endif %} text-white me-3">
+                <div class="card-body d-flex align-items-center p-2 p-md-3">
+                    <div class="metric-icon bg-{% if net_income >= 0 %}success{% else %}danger{% endif %} text-white me-2 me-md-3">
                         <i class="fas fa-{% if net_income >= 0 %}chart-line{% else %}chart-line-down{% endif %}"></i>
                     </div>
-                    <div>
-                        <h6 class="text-muted mb-0">Resultado</h6>
-                        <h4 class="mb-0 text-{% if net_income >= 0 %}success{% else %}danger{% endif %}">
+                    <div class="flex-grow-1">
+                        <h6 class="text-muted mb-0 small">Resultado</h6>
+                        <h4 class="mb-0 text-{% if net_income >= 0 %}success{% else %}danger{% endif %} metric-value">
                             R$ {{ net_income|floatformat:2 }}
                         </h4>
                     </div>
@@ -177,15 +299,15 @@
             </div>
         </div>
         
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <div class="card card-metric border-primary h-100">
-                <div class="card-body d-flex align-items-center">
-                    <div class="metric-icon bg-primary text-white me-3">
+                <div class="card-body d-flex align-items-center p-2 p-md-3">
+                    <div class="metric-icon bg-primary text-white me-2 me-md-3">
                         <i class="fas fa-wallet"></i>
                     </div>
-                    <div>
-                        <h6 class="text-muted mb-0">Saldo Total</h6>
-                        <h4 class="mb-0 text-primary">R$ {{ total_balance|floatformat:2 }}</h4>
+                    <div class="flex-grow-1">
+                        <h6 class="text-muted mb-0 small">Saldo Total</h6>
+                        <h4 class="mb-0 text-primary metric-value">R$ {{ total_balance|floatformat:2 }}</h4>
                     </div>
                 </div>
             </div>
@@ -231,14 +353,13 @@
                 <div class="card-body p-0">
                     <div class="list-group list-group-flush">
                         {% for account in accounts %}
-                        <div class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>{{ account.name }}</strong>
-                                <br>
-                                <small class="text-muted">{{ account.get_account_type_display }}</small>
+                        <div class="list-group-item account-list-item d-flex justify-content-between align-items-center p-2 p-md-3">
+                            <div class="flex-grow-1 text-truncate me-2">
+                                <strong class="d-block text-truncate">{{ account.name }}</strong>
+                                <small class="text-muted d-none d-md-inline">{{ account.get_account_type_display }}</small>
                             </div>
-                            <span class="badge bg-{% if account.current_balance >= 0 %}success{% else %}danger{% endif %} rounded-pill">
-                                R$ {{ account.current_balance|floatformat:2 }}
+                            <span class="badge bg-{% if account.current_balance >= 0 %}success{% else %}danger{% endif %} rounded-pill flex-shrink-0">
+                                <span class="d-none d-sm-inline">R$ </span>{{ account.current_balance|floatformat:2 }}
                             </span>
                         </div>
                         {% empty %}
@@ -271,31 +392,31 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover mb-0">
+                        <table class="table table-hover transaction-table-mobile mb-0">
                             <tbody>
                                 {% for transaction in recent_transactions %}
                                 <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="me-3">
+                                    <td class="p-2 p-md-3">
+                                        <div class="d-flex align-items-start">
+                                            <div class="me-2 me-md-3 transaction-icon">
                                                 <i class="fas fa-{% if transaction.transaction_type == 'income' %}arrow-up text-success{% else %}arrow-down text-danger{% endif %}"></i>
                                             </div>
-                                            <div>
-                                                <strong>{{ transaction.description }}</strong>
-                                                <br>
-                                                <small class="text-muted">
-                                                    {{ transaction.account.name }} • {{ transaction.transaction_date }}
+                                            <div class="flex-grow-1 min-width-0">
+                                                <strong class="d-block text-truncate">{{ transaction.description }}</strong>
+                                                <small class="text-muted d-block">
+                                                    <span class="d-none d-sm-inline">{{ transaction.account.name }} • </span>
+                                                    {{ transaction.transaction_date|date:"d/m" }}
                                                 </small>
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="text-end">
-                                        <strong class="text-{% if transaction.transaction_type == 'income' %}success{% else %}danger{% endif %}">
-                                            {% if transaction.transaction_type == 'income' %}+{% else %}-{% endif %}R$ {{ transaction.amount|floatformat:2 }}
+                                    <td class="text-end p-2 p-md-3">
+                                        <strong class="text-{% if transaction.transaction_type == 'income' %}success{% else %}danger{% endif %} d-block">
+                                            {% if transaction.transaction_type == 'income' %}+{% else %}-{% endif %}<span class="d-none d-sm-inline">R$ </span>{{ transaction.amount|floatformat:2 }}
                                         </strong>
-                                        <br>
-                                        <span class="badge bg-{% if transaction.status == 'completed' %}success{% elif transaction.status == 'pending' %}warning{% else %}secondary{% endif %}">
-                                            {{ transaction.get_status_display }}
+                                        <span class="badge bg-{% if transaction.status == 'completed' %}success{% elif transaction.status == 'pending' %}warning{% else %}secondary{% endif %} badge-sm">
+                                            <span class="d-none d-md-inline">{{ transaction.get_status_display }}</span>
+                                            <span class="d-md-none">{{ transaction.get_status_display|slice:":1" }}</span>
                                         </span>
                                     </td>
                                 </tr>
