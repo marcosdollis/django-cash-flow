@@ -349,6 +349,27 @@
                                     </ul>
                                 </div>
                                 <div class="col-md-6">
+                                    <h6>Notificações Push</h6>
+                                    <p class="text-muted small mb-3">Receba alertas importantes diretamente no seu dispositivo, mesmo quando o app estiver fechado.</p>
+                                    <div class="d-grid gap-2">
+                                        <button type="button" id="enable-notifications" class="btn btn-success btn-sm">
+                                            <i class="fas fa-bell me-2"></i>Ativar Notificações Push
+                                        </button>
+                                        <button type="button" id="disable-notifications" class="btn btn-outline-secondary btn-sm" style="display: none;">
+                                            <i class="fas fa-bell-slash me-2"></i>Desativar Notificações
+                                        </button>
+                                        <button type="button" id="test-notifications" class="btn btn-outline-info btn-sm">
+                                            <i class="fas fa-flask me-2"></i>Testar Notificação
+                                        </button>
+                                    </div>
+                                    <div id="notification-status" class="mt-2">
+                                        <small class="text-muted">Verificando status...</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="row">
+                                <div class="col-12">
                                     <h6>Configurações Avançadas</h6>
                                     {% if user_role == 'owner' %}
                                     <div class="d-grid gap-2">
@@ -494,6 +515,112 @@ document.addEventListener('DOMContentLoaded', function() {
             // Implementar carregamento do formulário via AJAX
         });
     }
+    
+    // === CONTROLE DE NOTIFICAÇÕES PUSH ===
+    const enableBtn = document.getElementById('enable-notifications');
+    const disableBtn = document.getElementById('disable-notifications');
+    const testBtn = document.getElementById('test-notifications');
+    const statusDiv = document.getElementById('notification-status');
+    
+    // Verificar status inicial das notificações
+    async function checkNotificationStatus() {
+        if (!window.pushManager) {
+            statusDiv.innerHTML = '<small class="text-warning"><i class="fas fa-exclamation-triangle me-1"></i>Notificações não suportadas neste navegador</small>';
+            enableBtn.disabled = true;
+            testBtn.disabled = true;
+            return;
+        }
+        
+        try {
+            const isSubscribed = await window.pushManager.checkSubscription();
+            updateNotificationUI(isSubscribed);
+        } catch (error) {
+            console.error('Erro ao verificar status:', error);
+            statusDiv.innerHTML = '<small class="text-danger"><i class="fas fa-times me-1"></i>Erro ao verificar status</small>';
+        }
+    }
+    
+    // Atualizar interface baseado no status
+    function updateNotificationUI(isSubscribed) {
+        if (isSubscribed) {
+            enableBtn.style.display = 'none';
+            disableBtn.style.display = 'block';
+            statusDiv.innerHTML = '<small class="text-success"><i class="fas fa-check me-1"></i>Notificações ativadas</small>';
+        } else {
+            enableBtn.style.display = 'block';
+            disableBtn.style.display = 'none';
+            statusDiv.innerHTML = '<small class="text-muted"><i class="fas fa-bell-slash me-1"></i>Notificações desativadas</small>';
+        }
+    }
+    
+    // Event listeners
+    enableBtn.addEventListener('click', async function() {
+        try {
+            enableBtn.disabled = true;
+            enableBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Ativando...';
+            
+            const success = await window.pushManager.subscribe();
+            
+            if (success) {
+                updateNotificationUI(true);
+            }
+        } catch (error) {
+            console.error('Erro ao ativar notificações:', error);
+            statusDiv.innerHTML = '<small class="text-danger"><i class="fas fa-times me-1"></i>Erro ao ativar notificações</small>';
+        } finally {
+            enableBtn.disabled = false;
+            enableBtn.innerHTML = '<i class="fas fa-bell me-2"></i>Ativar Notificações Push';
+        }
+    });
+    
+    disableBtn.addEventListener('click', async function() {
+        try {
+            disableBtn.disabled = true;
+            disableBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Desativando...';
+            
+            const success = await window.pushManager.unsubscribe();
+            
+            if (success) {
+                updateNotificationUI(false);
+            }
+        } catch (error) {
+            console.error('Erro ao desativar notificações:', error);
+            statusDiv.innerHTML = '<small class="text-danger"><i class="fas fa-times me-1"></i>Erro ao desativar notificações</small>';
+        } finally {
+            disableBtn.disabled = false;
+            disableBtn.innerHTML = '<i class="fas fa-bell-slash me-2"></i>Desativar Notificações';
+        }
+    });
+    
+    testBtn.addEventListener('click', async function() {
+        try {
+            testBtn.disabled = true;
+            testBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Enviando...';
+            
+            const response = await fetch('/api/push/test/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+            
+            if (response.ok) {
+                statusDiv.innerHTML = '<small class="text-success"><i class="fas fa-paper-plane me-1"></i>Notificação de teste enviada!</small>';
+                setTimeout(() => checkNotificationStatus(), 2000);
+            } else {
+                throw new Error('Erro na resposta do servidor');
+            }
+        } catch (error) {
+            console.error('Erro ao testar notificações:', error);
+            statusDiv.innerHTML = '<small class="text-danger"><i class="fas fa-times me-1"></i>Erro ao enviar notificação de teste</small>';
+        } finally {
+            testBtn.disabled = false;
+            testBtn.innerHTML = '<i class="fas fa-flask me-2"></i>Testar Notificação';
+        }
+    });
+    
+    // Verificar status ao carregar a página
+    checkNotificationStatus();
 });
 
 // Manter a aba ativa após reload
