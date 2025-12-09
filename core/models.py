@@ -87,3 +87,70 @@ class PushNotificationLog(models.Model):
     
     def __str__(self):
         return f"{self.title} - {self.subscription.user.email} ({self.status})"
+
+
+class ScheduledNotification(models.Model):
+    """Modelo para notificações push agendadas"""
+    
+    FREQUENCY_CHOICES = [
+        ('daily', 'Diário'),
+        ('weekly', 'Semanal'),
+        ('monthly', 'Mensal'),
+    ]
+    
+    title = models.CharField('Título', max_length=100)
+    body = models.TextField('Mensagem')
+    icon = models.CharField('Ícone', max_length=100, default='/static/icons/icon-192x192.png')
+    url = models.CharField('URL', max_length=200, blank=True)
+    
+    # Agendamento
+    frequency = models.CharField('Frequência', max_length=20, choices=FREQUENCY_CHOICES, default='daily')
+    scheduled_time = models.TimeField('Horário')
+    is_active = models.BooleanField('Ativo', default=True)
+    
+    # Controle de envio
+    last_sent = models.DateTimeField('Último Envio', null=True, blank=True)
+    next_send = models.DateTimeField('Próximo Envio', null=True, blank=True)
+    
+    # Metadados
+    created_at = models.DateTimeField('Criado em', auto_now_add=True)
+    updated_at = models.DateTimeField('Atualizado em', auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Notificação Agendada'
+        verbose_name_plural = 'Notificações Agendadas'
+        ordering = ['scheduled_time']
+    
+    def __str__(self):
+        return f"{self.title} - {self.scheduled_time.strftime('%H:%M')}"
+    
+    def should_send_now(self):
+        """Verifica se deve enviar a notificação agora"""
+        if not self.is_active:
+            return False
+        
+        now = timezone.now()
+        
+        # Para notificações diárias, verifica se é a hora certa e não foi enviada hoje
+        if self.frequency == 'daily':
+            if now.time() >= self.scheduled_time:
+                if self.last_sent:
+                    # Verifica se já foi enviada hoje
+                    return self.last_sent.date() < now.date()
+                else:
+                    # Nunca foi enviada, pode enviar
+                    return True
+        
+        return False
+    
+    def mark_sent(self):
+        """Marca como enviada e calcula próximo envio"""
+        now = timezone.now()
+        self.last_sent = now
+        
+        if self.frequency == 'daily':
+            # Próximo envio amanhã na mesma hora
+            tomorrow = now + timezone.timedelta(days=1)
+            self.next_send = timezone.datetime.combine(tomorrow.date(), self.scheduled_time)
+        
+        self.save(update_fields=['last_sent', 'next_send'])

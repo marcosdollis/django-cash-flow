@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import PushSubscription, PushNotificationLog
+from .models import PushSubscription, PushNotificationLog, ScheduledNotification
 
 
 @admin.register(PushSubscription)
@@ -58,4 +58,40 @@ class PushNotificationLogAdmin(admin.ModelAdmin):
     def has_change_permission(self, request, obj=None):
         # Logs são read-only
         return False
+
+
+@admin.register(ScheduledNotification)
+class ScheduledNotificationAdmin(admin.ModelAdmin):
+    list_display = ['title', 'scheduled_time', 'is_active', 'last_sent', 'next_send']
+    list_filter = ['is_active', 'scheduled_time']
+    search_fields = ['title', 'body']
+    readonly_fields = ['last_sent', 'next_send']
+    
+    fieldsets = (
+        ('Configuração', {
+            'fields': ('title', 'body', 'scheduled_time', 'is_active')
+        }),
+        ('Informações', {
+            'fields': ('icon', 'url', 'last_sent', 'next_send'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def next_send(self, obj):
+        from django.utils import timezone
+        now = timezone.now()
+        today = now.date()
+        scheduled_time = obj.scheduled_time
+        
+        # Cria datetime para hoje com o horário agendado
+        next_send = timezone.datetime.combine(today, scheduled_time)
+        next_send = timezone.make_aware(next_send)
+        
+        # Se já passou hoje, agenda para amanhã
+        if next_send <= now:
+            next_send = next_send + timezone.timedelta(days=1)
+        
+        return next_send.strftime('%d/%m/%Y %H:%M')
+    
+    next_send.short_description = 'Próximo Envio'
 
