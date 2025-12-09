@@ -38,11 +38,11 @@ class TransactionForm(forms.ModelForm):
             'transaction_date': forms.DateInput(attrs={
                 'class': 'form-control',
                 'type': 'date'
-            }),
+            }, format='%Y-%m-%d'),
             'due_date': forms.DateInput(attrs={
                 'class': 'form-control',
                 'type': 'date'
-            }),
+            }, format='%Y-%m-%d'),
             'transfer_to_account': forms.Select(attrs={
                 'class': 'form-control'
             }),
@@ -52,7 +52,7 @@ class TransactionForm(forms.ModelForm):
             'recurrence_end_date': forms.DateInput(attrs={
                 'class': 'form-control',
                 'type': 'date'
-            }),
+            }, format='%Y-%m-%d'),
             'notes': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 3,
@@ -221,11 +221,11 @@ class GoalForm(forms.ModelForm):
             'start_date': forms.DateInput(attrs={
                 'class': 'form-control',
                 'type': 'date'
-            }),
+            }, format='%Y-%m-%d'),
             'target_date': forms.DateInput(attrs={
                 'class': 'form-control',
                 'type': 'date'
-            }),
+            }, format='%Y-%m-%d'),
             'category': forms.Select(attrs={
                 'class': 'form-control'
             })
@@ -305,7 +305,7 @@ class TransactionFilterForm(forms.Form):
         widget=forms.DateInput(attrs={
             'class': 'form-control',
             'type': 'date'
-        })
+        }, format='%Y-%m-%d')
     )
     
     date_to = forms.DateField(
@@ -313,7 +313,7 @@ class TransactionFilterForm(forms.Form):
         widget=forms.DateInput(attrs={
             'class': 'form-control',
             'type': 'date'
-        })
+        }, format='%Y-%m-%d')
     )
     
     def __init__(self, *args, **kwargs):
