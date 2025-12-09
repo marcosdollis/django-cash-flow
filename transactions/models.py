@@ -77,6 +77,15 @@ class Account(models.Model):
     def __str__(self):
         return f"{self.name} ({self.get_account_type_display()})"
     
+    def save(self, *args, **kwargs):
+        """Salva a conta e inicializa o saldo atual se necessário"""
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        
+        # Se é uma nova conta, inicializar o saldo atual com o saldo inicial
+        if is_new and self.initial_balance != 0:
+            self.update_balance()
+    
     def update_balance(self):
         """Atualiza o saldo baseado nas transações"""
         from django.db.models import Sum, Q
