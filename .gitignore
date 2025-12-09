@@ -94,6 +94,15 @@ ENV/
 env.bak/
 venv.bak/
 
+# VAPID Keys (sensitive - never commit!)
+private_key.pem
+public_key.pem
+*_key.pem
+
+# Push notification keys
+vapid_keys/
+*.key
+
 # Spyder project settings
 .spyderproject
 .spyproject
