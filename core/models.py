@@ -154,3 +154,45 @@ class ScheduledNotification(models.Model):
             self.next_send = timezone.datetime.combine(tomorrow.date(), self.scheduled_time)
         
         self.save(update_fields=['last_sent', 'next_send'])
+
+
+class WebAuthnCredential(models.Model):
+    """
+    Modelo para armazenar credenciais WebAuthn (autenticação biométrica)
+    """
+    
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='webauthn_credential'
+    )
+    
+    # Dados da credencial
+    credential_id = models.CharField(max_length=255, unique=True)
+    public_key = models.TextField()  # Chave pública em formato PEM
+    sign_count = models.PositiveIntegerField(default=0)
+    
+    # Metadados
+    device_name = models.CharField(max_length=100, blank=True)
+    device_type = models.CharField(max_length=50, blank=True)  # 'platform' ou 'cross-platform'
+    transports = models.JSONField(default=list, blank=True)  # ['usb', 'nfc', 'ble', 'internal']
+    
+    # Controle
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_used = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        verbose_name = 'Credencial WebAuthn'
+        verbose_name_plural = 'Credenciais WebAuthn'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.user.email} - {self.device_name or 'Dispositivo'}"
+    
+    def mark_used(self):
+        """Atualiza o contador de uso"""
+        from django.utils import timezone
+        self.sign_count += 1
+        self.last_used = timezone.now()
+        self.save(update_fields=['sign_count', 'last_used'])

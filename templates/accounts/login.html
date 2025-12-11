@@ -48,6 +48,14 @@
                             <button type="submit" class="btn btn-primary btn-lg">
                                 <i class="fas fa-sign-in-alt me-1"></i>Entrar
                             </button>
+                            
+                            <!-- Login Biométrico -->
+                            <div id="biometric-login-section" style="display: none;">
+                                <hr class="my-3">
+                                <button type="button" id="biometric-login-btn" class="btn btn-outline-success btn-lg w-100">
+                                    <i class="fas fa-fingerprint me-2"></i>Entrar com Biometria
+                                </button>
+                            </div>
                         </div>
                     </form>
                     
@@ -117,4 +125,63 @@ body {
     padding: 12px;
 }
 </style>
+
+<script>
+// Login Biométrico
+document.addEventListener('DOMContentLoaded', async function() {
+    const biometricSection = document.getElementById('biometric-login-section');
+    const biometricBtn = document.getElementById('biometric-login-btn');
+    
+    // Verificar se biometria está disponível e registrada
+    try {
+        const available = await biometricAuth.checkAvailability();
+        const registered = await biometricAuth.checkRegistration();
+        
+        if (available && registered) {
+            biometricSection.style.display = 'block';
+        }
+    } catch (error) {
+        console.error('Erro ao verificar biometria:', error);
+    }
+    
+    // Login com biometria
+    biometricBtn.addEventListener('click', async function() {
+        try {
+            biometricBtn.disabled = true;
+            biometricBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Autenticando...';
+            
+            const result = await biometricAuth.authenticate();
+            
+            // Redirecionar após autenticação bem-sucedida
+            window.location.href = '/core/dashboard/';
+            
+        } catch (error) {
+            console.error('Erro no login biométrico:', error);
+            
+            // Mostrar erro
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-danger alert-dismissible fade show mt-3';
+            alertDiv.innerHTML = `
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                ${error.message || 'Falha na autenticação biométrica'}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            const form = document.querySelector('form');
+            form.parentNode.insertBefore(alertDiv, form.nextSibling);
+            
+            // Auto-remover após 5 segundos
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+            
+        } finally {
+            biometricBtn.disabled = false;
+            biometricBtn.innerHTML = '<i class="fas fa-fingerprint me-2"></i>Entrar com Biometria';
+        }
+    });
+});
+</script>
 {% endblock %}

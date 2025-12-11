@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import PushSubscription, PushNotificationLog, ScheduledNotification
+from .models import PushSubscription, PushNotificationLog, ScheduledNotification, WebAuthnCredential
 
 
 @admin.register(PushSubscription)
@@ -94,4 +94,33 @@ class ScheduledNotificationAdmin(admin.ModelAdmin):
         return next_send.strftime('%d/%m/%Y %H:%M')
     
     next_send.short_description = 'Próximo Envio'
+
+
+@admin.register(WebAuthnCredential)
+class WebAuthnCredentialAdmin(admin.ModelAdmin):
+    list_display = ['user', 'device_name', 'device_type', 'is_active', 'last_used', 'created_at']
+    list_filter = ['is_active', 'device_type', 'created_at']
+    search_fields = ['user__email', 'user__first_name', 'user__last_name', 'device_name']
+    readonly_fields = ['credential_id', 'public_key', 'sign_count', 'created_at', 'last_used']
+    
+    fieldsets = (
+        ('Usuário', {
+            'fields': ('user', 'is_active')
+        }),
+        ('Dispositivo', {
+            'fields': ('device_name', 'device_type', 'transports')
+        }),
+        ('Credencial', {
+            'fields': ('credential_id', 'public_key', 'sign_count'),
+            'classes': ('collapse',)
+        }),
+        ('Datas', {
+            'fields': ('created_at', 'last_used'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def has_add_permission(self, request):
+        # Credenciais são criadas via API/WebAuthn
+        return False
 

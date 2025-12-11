@@ -213,3 +213,214 @@ def test_push(request):
     except Exception as e:
         logger.error(f"Erro ao enviar notificação teste: {str(e)}")
         return JsonResponse({'error': str(e)}, status=500)
+
+
+# ==================== WEB AUTHN (BIOMETRIA) ====================
+
+from webauthn import (
+    generate_registration_options,
+    verify_registration_response,
+    generate_authentication_options,
+    verify_authentication_response,
+    options_to_json,
+    base64url_to_bytes
+)
+from webauthn.helpers import bytes_to_base64url
+from core.models import WebAuthnCredential
+import secrets
+
+
+@login_required
+@require_http_methods(["GET"])
+@csrf_exempt
+def webauthn_registration_options(request):
+    """
+    Gera opções para registro de credencial WebAuthn
+    """
+    try:
+        # Verificar se usuário já tem credencial
+        if hasattr(request.user, 'webauthn_credential'):
+            return JsonResponse({
+                'error': 'Usuário já possui credencial biométrica registrada'
+            }, status=400)
+        
+        # Gerar opções de registro
+        options = generate_registration_options(
+            rp_id=request.get_host().split(':')[0],  # Remove porta se houver
+            rp_name="CashFlow Manager",
+            user_id=str(request.user.id),
+            user_name=request.user.email,
+            user_display_name=request.user.get_full_name() or request.user.email,
+            challenge=secrets.token_bytes(32),
+        )
+        
+        # Armazenar challenge na sessão para verificação posterior
+        request.session['webauthn_registration_challenge'] = bytes_to_base64url(options.challenge)
+        
+        return JsonResponse(options_to_json(options))
+        
+    except Exception as e:
+        logger.error(f"Erro ao gerar opções de registro WebAuthn: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+@csrf_exempt
+def webauthn_registration_verify(request):
+    """
+    Verifica e registra a credencial WebAuthn
+    """
+    try:
+        data = json.loads(request.body)
+        
+        # Recuperar challenge da sessão
+        challenge_b64 = request.session.get('webauthn_registration_challenge')
+        if not challenge_b64:
+            return JsonResponse({'error': 'Challenge não encontrado'}, status=400)
+        
+        # Verificar resposta de registro
+        verification = verify_registration_response(
+            credential=data,
+            expected_challenge=base64url_to_bytes(challenge_b64),
+            expected_origin=f"https://{request.get_host().split(':')[0]}",
+            expected_rp_id=request.get_host().split(':')[0],
+        )
+        
+        # Salvar credencial
+        credential = WebAuthnCredential.objects.create(
+            user=request.user,
+            credential_id=verification.credential_id,
+            public_key=verification.credential_public_key,
+            sign_count=verification.sign_count,
+            device_name=data.get('device_name', 'Dispositivo Biométrico'),
+            device_type='platform',  # Assume platform authenticator
+            transports=data.get('transports', []),
+        )
+        
+        # Limpar challenge da sessão
+        del request.session['webauthn_registration_challenge']
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Credencial biométrica registrada com sucesso',
+            'credential_id': credential.credential_id
+        })
+        
+    except Exception as e:
+        logger.error(f"Erro ao verificar registro WebAuthn: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+@require_http_methods(["GET"])
+@csrf_exempt
+def webauthn_authentication_options(request):
+    """
+    Gera opções para autenticação WebAuthn
+    """
+    try:
+        # Verificar se usuário tem credencial
+        if not hasattr(request.user, 'webauthn_credential'):
+            return JsonResponse({
+                'error': 'Nenhuma credencial biométrica registrada'
+            }, status=400)
+        
+        credential = request.user.webauthn_credential
+        
+        # Gerar opções de autenticação
+        options = generate_authentication_options(
+            rp_id=request.get_host().split(':')[0],
+            challenge=secrets.token_bytes(32),
+            allow_credentials=[{
+                "type": "public-key",
+                "id": credential.credential_id,
+            }],
+        )
+        
+        # Armazenar challenge na sessão
+        request.session['webauthn_authentication_challenge'] = bytes_to_base64url(options.challenge)
+        
+        return JsonResponse(options_to_json(options))
+        
+    except Exception as e:
+        logger.error(f"Erro ao gerar opções de autenticação WebAuthn: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+@csrf_exempt
+def webauthn_authentication_verify(request):
+    """
+    Verifica a autenticação WebAuthn
+    """
+    try:
+        data = json.loads(request.body)
+        
+        # Recuperar challenge da sessão
+        challenge_b64 = request.session.get('webauthn_authentication_challenge')
+        if not challenge_b64:
+            return JsonResponse({'error': 'Challenge não encontrado'}, status=400)
+        
+        credential = request.user.webauthn_credential
+        
+        # Verificar resposta de autenticação
+        verification = verify_authentication_response(
+            credential=data,
+            expected_challenge=base64url_to_bytes(challenge_b64),
+            expected_origin=f"https://{request.get_host().split(':')[0]}",
+            expected_rp_id=request.get_host().split(':')[0],
+            credential_public_key=credential.public_key,
+            credential_current_sign_count=credential.sign_count,
+        )
+        
+        # Atualizar contador de uso
+        credential.sign_count = verification.new_sign_count
+        credential.mark_used()
+        
+        # Limpar challenge da sessão
+        del request.session['webauthn_authentication_challenge']
+        
+        # Fazer login do usuário (se necessário)
+        from django.contrib.auth import login
+        login(request, request.user)
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Autenticação biométrica realizada com sucesso',
+            'user': {
+                'id': request.user.id,
+                'email': request.user.email,
+                'name': request.user.get_full_name(),
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Erro ao verificar autenticação WebAuthn: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+@require_http_methods(["DELETE"])
+@csrf_exempt
+def webauthn_remove_credential(request):
+    """
+    Remove a credencial WebAuthn do usuário
+    """
+    try:
+        if hasattr(request.user, 'webauthn_credential'):
+            request.user.webauthn_credential.delete()
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Credencial biométrica removida com sucesso'
+            })
+        else:
+            return JsonResponse({
+                'error': 'Nenhuma credencial biométrica encontrada'
+            }, status=404)
+            
+    except Exception as e:
+        logger.error(f"Erro ao remover credencial WebAuthn: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)

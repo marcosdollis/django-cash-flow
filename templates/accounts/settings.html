@@ -365,9 +365,24 @@
                                     <div id="notification-status" class="mt-2">
                                         <small class="text-muted">Verificando status...</small>
                                     </div>
+                                <div class="col-md-6">
+                                    <h6>Autenticação Biométrica</h6>
+                                    <p class="text-muted small mb-3">Use impressão digital, reconhecimento facial ou outros métodos biométricos para fazer login de forma segura e rápida.</p>
+                                    <div class="d-grid gap-2">
+                                        <button type="button" id="register-biometric" class="btn btn-primary btn-sm">
+                                            <i class="fas fa-fingerprint me-2"></i>Registrar Biometria
+                                        </button>
+                                        <button type="button" id="remove-biometric" class="btn btn-outline-danger btn-sm" style="display: none;">
+                                            <i class="fas fa-trash me-2"></i>Remover Biometria
+                                        </button>
+                                        <button type="button" id="test-biometric" class="btn btn-outline-info btn-sm" style="display: none;">
+                                            <i class="fas fa-flask me-2"></i>Testar Biometria
+                                        </button>
+                                    </div>
+                                    <div id="biometric-status" class="mt-2">
+                                        <small class="text-muted">Verificando disponibilidade...</small>
+                                    </div>
                                 </div>
-                            </div>
-                            <hr>
                             <div class="row">
                                 <div class="col-12">
                                     <h6>Configurações Avançadas</h6>
@@ -640,6 +655,111 @@ tabButtons.forEach(button => {
         const target = e.target.getAttribute('data-bs-target');
         window.history.replaceState(null, null, target);
     });
+});
+
+// === CONTROLE DE AUTENTICAÇÃO BIOMÉTRICA ===
+document.addEventListener('DOMContentLoaded', async function() {
+    const registerBtn = document.getElementById('register-biometric');
+    const removeBtn = document.getElementById('remove-biometric');
+    const testBtn = document.getElementById('test-biometric');
+    const statusDiv = document.getElementById('biometric-status');
+
+    // Verificar status da biometria
+    async function checkBiometricStatus() {
+        try {
+            const available = await biometricAuth.checkAvailability();
+            const registered = await biometricAuth.checkRegistration();
+
+            if (!available) {
+                statusDiv.innerHTML = '<small class="text-warning"><i class="fas fa-exclamation-triangle me-1"></i>Biometria não disponível neste dispositivo</small>';
+                registerBtn.disabled = true;
+                return;
+            }
+
+            if (registered) {
+                statusDiv.innerHTML = '<small class="text-success"><i class="fas fa-check-circle me-1"></i>Biometria registrada e ativa</small>';
+                registerBtn.style.display = 'none';
+                removeBtn.style.display = 'inline-block';
+                testBtn.style.display = 'inline-block';
+            } else {
+                statusDiv.innerHTML = '<small class="text-info"><i class="fas fa-info-circle me-1"></i>Biometria disponível, mas não registrada</small>';
+                registerBtn.style.display = 'inline-block';
+                removeBtn.style.display = 'none';
+                testBtn.style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Erro ao verificar status biométrico:', error);
+            statusDiv.innerHTML = '<small class="text-danger"><i class="fas fa-times me-1"></i>Erro ao verificar biometria</small>';
+        }
+    }
+
+    // Registrar biometria
+    registerBtn.addEventListener('click', async function() {
+        try {
+            registerBtn.disabled = true;
+            registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Registrando...';
+
+            await biometricAuth.register();
+
+            biometricAuth.showSuccess('Biometria registrada com sucesso! 🎉');
+            await checkBiometricStatus();
+
+        } catch (error) {
+            console.error('Erro ao registrar biometria:', error);
+            biometricAuth.showError(error.message || 'Erro ao registrar biometria');
+        } finally {
+            registerBtn.disabled = false;
+            registerBtn.innerHTML = '<i class="fas fa-fingerprint me-2"></i>Registrar Biometria';
+        }
+    });
+
+    // Remover biometria
+    removeBtn.addEventListener('click', async function() {
+        if (!confirm('Tem certeza que deseja remover a autenticação biométrica?')) {
+            return;
+        }
+
+        try {
+            removeBtn.disabled = true;
+            removeBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Removendo...';
+
+            await biometricAuth.remove();
+
+            biometricAuth.showSuccess('Biometria removida com sucesso');
+            await checkBiometricStatus();
+
+        } catch (error) {
+            console.error('Erro ao remover biometria:', error);
+            biometricAuth.showError(error.message || 'Erro ao remover biometria');
+        } finally {
+            removeBtn.disabled = false;
+            removeBtn.innerHTML = '<i class="fas fa-trash me-2"></i>Remover Biometria';
+        }
+    });
+
+    // Testar biometria
+    testBtn.addEventListener('click', async function() {
+        try {
+            testBtn.disabled = true;
+            testBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Testando...';
+
+            const result = await biometricAuth.authenticate();
+
+            biometricAuth.showSuccess('Autenticação biométrica realizada com sucesso! 🔐');
+            statusDiv.innerHTML = '<small class="text-success"><i class="fas fa-check-circle me-1"></i>Autenticação bem-sucedida</small>';
+
+        } catch (error) {
+            console.error('Erro na autenticação biométrica:', error);
+            biometricAuth.showError(error.message || 'Falha na autenticação biométrica');
+            statusDiv.innerHTML = '<small class="text-danger"><i class="fas fa-times me-1"></i>Falha na autenticação</small>';
+        } finally {
+            testBtn.disabled = false;
+            testBtn.innerHTML = '<i class="fas fa-flask me-2"></i>Testar Biometria';
+        }
+    });
+
+    // Verificar status ao carregar a página
+    await checkBiometricStatus();
 });
 </script>
 {% endblock %}

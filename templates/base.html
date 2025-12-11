@@ -233,6 +233,7 @@
         window.VAPID_PUBLIC_KEY = '{{ VAPID_PUBLIC_KEY|default:"" }}';
     </script>
     <script src="{% load static %}{% static 'js/push-notifications.js' %}"></script>
+    <script src="{% load static %}{% static 'js/biometric-auth.js' %}"></script>
     {% endif %}
     
     <!-- PWA Service Worker Registration -->
